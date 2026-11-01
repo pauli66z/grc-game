@@ -1,0 +1,784 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PIM Case Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Red+Hat+Mono:wght@400;500;600&family=Kalam:wght@700&display=swap">
+<style>
+/* Layout: one case file at a time on the desk (left), the policy rulebook beside it (right), stamp tray under the case */
+:root{
+  --desk:#d9dee5; --paper:#fbfaf6; --paper-line:#e6e2d8; --panel:#ffffff; --ink:#1b2230; --muted:#5d6879; --line:#e1e6ec;
+  --bar:#1d2430; --bar-ink:#e7ebf1; --bar-muted:#9aa6b6;
+  --accent:#2457a6; --accent-soft:#e8eef8; --accent-ink:#ffffff;
+  --red:#c2412d; --red-soft:#fdf1ee; --green:#2f7d55; --green-soft:#e6f3ec; --amber:#a2650b; --amber-soft:#fff3dc;
+  --sans:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --mono:"Red Hat Mono",ui-monospace,monospace; --hand:"Kalam","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{background:var(--bar);color:var(--bar-ink);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:600}
+.brand small,.stat small{display:block;font-size:11px;color:var(--bar-muted)}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+.stat b{font-family:var(--mono);font-weight:500}
+.linkbtn{all:unset;cursor:pointer;font-size:12px;color:var(--bar-muted);text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.dot.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.dot.flag{background:var(--red-soft);color:var(--red);border-color:transparent}
+.dot.gap{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.dot[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink)}
+.dot:focus-visible{outline:2px solid var(--accent)}
+.grid{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.left{flex:999 1 560px;min-width:0;display:grid;gap:14px}
+.rules{flex:1 1 320px;max-width:440px;min-width:0;background:var(--panel);border-radius:12px;overflow:hidden}
+@media (max-width:900px){.rules{max-width:none}}
+/* case file */
+.case{position:relative;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px 14px 14px 14px;padding:20px 22px;display:grid;gap:16px;box-shadow:0 1px 0 var(--paper-line),0 8px 24px #0000000f}
+.case::before{content:"CASE FILE";position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--paper);border:1px solid var(--paper-line);border-bottom:0;border-radius:8px 8px 0 0;padding:3px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.casehead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.casehead h1{font-size:22px;margin:0;font-weight:600;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec{display:grid;gap:8px;border-top:1px dashed var(--paper-line);padding-top:12px}
+.sec h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}
+.kv div{display:grid;gap:1px;min-width:0}
+.kv span{font-size:11px;color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:500;font-size:13px;overflow-wrap:anywhere}
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.role{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.none{font-size:13px;color:var(--muted);font-style:italic}
+.stamp{position:absolute;right:22px;top:22px;font-family:var(--hand);font-size:30px;padding:2px 14px;border:3px solid currentColor;border-radius:8px;transform:rotate(-8deg);pointer-events:none;background:var(--paper)}
+.stamp.ok{color:var(--green)}.stamp.flag{color:var(--red)}.stamp.gap{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thud .25s ease-out}@keyframes thud{from{transform:rotate(-8deg) scale(1.6);opacity:0}}}
+/* tray */
+.tray{background:var(--panel);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.trayrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.big{cursor:pointer;font-family:var(--hand);font-size:22px;padding:8px 22px;border-radius:10px;border:3px solid currentColor;background:transparent}
+.big.ok{color:var(--green)}.big.flag{color:var(--red)}.big.gap{color:var(--amber)}
+.big:hover{background:var(--panel)}
+.btn{cursor:pointer;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.esc{border-color:var(--red);color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:6px}
+legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;background:var(--panel)}
+.chips label:has(input:checked){border-color:var(--red);background:var(--red-soft)}
+.chips input{accent-color:var(--red)}
+.chips.mono label{font-family:var(--mono)}
+.err{color:var(--red);font-size:13px;margin:0}
+/* rulebook */
+.rtabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+.rtab{all:unset;cursor:pointer;flex:1;text-align:center;padding:11px 6px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+.rtab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+.rtab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rbody{padding:14px 16px;display:grid;gap:2px;max-height:72vh;overflow:auto}
+.clause{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.clause b{font-family:var(--mono);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.m{font-family:var(--mono);white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);padding-top:8px}
+/* overlays */
+.scrim{position:fixed;inset:0;background:#0b0f1599;display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--panel);color:var(--ink);border-radius:12px;width:min(540px,100%);max-height:calc(100% - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.modal h2{margin:0;font-size:18px}
+.modal p{margin:0}
+.who{display:flex;gap:10px;align-items:center}
+.av{flex:0 0 34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+/* intro & debrief */
+.sheet{background:var(--paper);border:1px solid var(--paper-line);border-radius:14px;padding:24px;display:grid;gap:14px;max-width:760px}
+.sheet h1{margin:0;font-size:26px;text-wrap:balance}
+.sheet p{margin:0;max-width:65ch}
+.sheet ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.score{display:flex;flex-wrap:wrap;gap:10px}
+.score div{flex:1 1 130px;border:1px solid var(--paper-line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.score b{display:block;font-family:var(--mono);font-size:22px}
+.res{display:grid;gap:8px}
+.res h3{margin:6px 0 0;font-size:15px}
+.item{border-left:3px solid var(--line);padding:5px 0 5px 12px;display:grid;gap:2px}
+.item.hit{border-left-color:var(--green)}.item.part{border-left-color:var(--amber)}.item.miss{border-left-color:var(--red)}
+.tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.hit .tag{color:var(--green)}.part .tag{color:var(--amber)}.miss .tag{color:var(--red)}
+.small{font-size:12.5px}.muted{color:var(--muted)}
+.bigstamp{font-family:var(--hand);font-size:30px;color:var(--red);display:inline-block;border:3px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-4deg)}
+.av-aoife{background:#d7eeec;overflow:hidden;padding:0}.av-aoife svg{width:100%;height:100%;display:block}
+.who .av-aoife{flex-basis:44px;height:44px}
+.aoife-note{display:flex;gap:10px;align-items:flex-start;background:var(--amber-soft);border-radius:10px;padding:10px 12px}
+.aoife-note .av{flex:0 0 38px;height:38px}.aoife-note>div{display:grid;gap:2px;min-width:0}
+.aoife-note .tag{color:var(--amber)}
+.intro-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.intro-top>div{flex:1 1 280px;display:grid;gap:10px}
+.aoife-full{width:150px;height:auto;flex:0 0 auto}
+@media (max-width:520px){.aoife-full{width:110px}}
+.db-msg{display:grid;gap:8px;font-size:15.5px}.db-msg p{margin:0}
+.db-list{margin:0;padding-left:22px;display:grid;gap:14px}.db-list li{display:grid;gap:4px}
+.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.db-report{min-width:640px}.db-report th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line)}
+.db-more{border:1px solid var(--line);border-radius:10px;padding:10px 14px}.db-more summary{cursor:pointer;font-weight:600}.db-more[open] summary{margin-bottom:10px}
+.jobs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:16px}.jobs h3{margin:0 0 4px;font-size:15px}
+.job{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.job>div{display:grid;gap:2px;min-width:0}.job-n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.job-s{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.job.open .job-s{background:var(--green-soft);color:var(--green)}.job.locked{opacity:.75}.job.locked .job-s{background:var(--line);color:var(--muted)}
+@media (max-width:520px){.job{grid-template-columns:1fr}}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--bar);color:var(--bar-ink);padding:10px 14px;border-radius:10px;max-width:340px;font-size:13px}
+.pim{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}.pim th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--line)}.pim td{padding:6px;border-bottom:1px solid var(--line)}
+</style>
+
+<header class="bar">
+  <div class="brand"><div class="logo">N</div><div><b>Northbay Payments</b><small>Privileged access review · Job 03 · Stage 1</small></div><a href="index.html" style="margin-left:8px;font-size:12px;color:var(--bar-muted);white-space:nowrap">← Game home</a></div>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ---------- Links ---------- */
+const HOME="index.html";
+const STAGE2="job03-stage2.html";
+
+/* ---------- Data ---------- */
+// Each case: name, sub (eyebrow), secs: [{h, kv:[[label,value]], roles:[[role,type,duration,assigned]], text}]
+const R=(role,type,dur,on)=>[role,type,dur,on];
+const C={
+ "bg-admin01":{name:"bg-admin01",sub:"Emergency access account",secs:[
+  {h:"Entra account",kv:[["Sign-in name","bg-admin01@northbaypay.onmicrosoft.com"],["User type","Member (cloud-only)"],["Status","Enabled"],["Created","2025-02-03"],["Last sign-in","2027-02-10"]]},
+  {h:"PIM role assignments",roles:[R("Global Administrator","Active","Permanent","2025-02-03")]},
+  {h:"Emergency access controls",kv:[["MFA method","FIDO2 security key"],["Conditional Access","Excluded (EmergencyAccess group)"],["Sign-in alert","On: critical alert to Security"],["Last tested","2027-02-10"],["Credentials","Sealed, held in two safes"]]},
+  {h:"Access request",text:"Set up under change CHG-2025-014 (emergency access accounts), approved by the CISO."}]},
+ "bg-admin02":{name:"bg-admin02",sub:"Emergency access account",secs:[
+  {h:"Entra account",kv:[["Sign-in name","bg-admin02@northbaypay.onmicrosoft.com"],["User type","Member (cloud-only)"],["Status","Enabled"],["Created","2025-02-03"],["Last sign-in","2026-08-20"]]},
+  {h:"PIM role assignments",roles:[R("Global Administrator","Active","Permanent","2025-02-03")]},
+  {h:"Emergency access controls",kv:[["MFA method","FIDO2 security key"],["Conditional Access","Excluded (EmergencyAccess group)"],["Sign-in alert","Not configured"],["Last tested","2026-08-20"],["Credentials","Sealed, held in two safes"]]},
+  {h:"Access request",text:"Set up under change CHG-2025-014 (emergency access accounts), approved by the CISO."}]},
+ cflynn:{name:"Conor Flynn",sub:"cflynn@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","IT"],["Job title","Head of IT"],["Employee ID","E1012"],["User type","Member"],["Status","Enabled"],["Last sign-in","2027-04-09"]]},
+  {h:"PIM role assignments",roles:[R("Global Administrator","Eligible","Permanent","2025-02-03")]},
+  {h:"HR record, Jan–Mar",text:"No HR changes this quarter."},
+  {h:"PIM activity, Jan–Mar",kv:[["Activations","4"],["MFA and justification","Given every time"],["Approved by","Niamh O'Connor, CISO (all 4)"],["Longest activation","3 hours"]]},
+  {h:"Access request",text:"Assigned before this quarter. Covered by earlier reviews."}]},
+ dmoran:{name:"Declan Moran",sub:"dmoran@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","IT"],["Job title","IT Systems Administrator"],["Employee ID","E1021"],["User type","Member"],["Status","Enabled"],["Last sign-in","2027-04-09"]]},
+  {h:"PIM role assignments",roles:[R("User Administrator","Eligible","Permanent","2024-06-11"),R("Groups Administrator","Eligible","Permanent","2024-06-11"),R("Global Administrator","Active","Permanent","2025-03-14")]},
+  {h:"HR record, Jan–Mar",text:"No HR changes this quarter."},
+  {h:"PIM activity, Jan–Mar",kv:[["Global Administrator","Always on, so never activated"],["Days with admin sign-ins","41"]]},
+  {h:"Access request",kv:[["Global Administrator","CHG-2025-031: M365 migration"],["Approved for","Migration window, 14 to 28 March 2025"],["Approved by","Conor Flynn, Head of IT"]]}]},
+ rdoyle:{name:"Ruairí Doyle",sub:"rdoyle@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","IT"],["Job title","Cloud Engineer"],["Employee ID","E1120"],["User type","Member"],["Status","Enabled"],["Last sign-in","2027-04-08"]]},
+  {h:"PIM role assignments",roles:[R("Application Administrator","Eligible","Permanent","2025-10-01"),R("Privileged Role Administrator","Eligible","Permanent","2026-11-03")]},
+  {h:"HR record, Jan–Mar",text:"No HR changes this quarter."},
+  {h:"PIM activity, Jan–Mar",kv:[["Privileged Role Administrator","Activated twice"],["Justification given","\"Assigning roles for the new app team\""]]},
+  {h:"Access request",kv:[["Application Administrator","RITM0049310, approved"],["Privileged Role Administrator","No request found. Added by Declan Moran on 2026-11-03"]]}]},
+ mkelly:{name:"Mairéad Kelly",sub:"mkelly@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","IT"],["Job title","Service Desk Analyst"],["Employee ID","E1131"],["User type","Member"],["Status","Enabled"],["Last sign-in","2027-03-05"]]},
+  {h:"PIM role assignments",roles:[R("Helpdesk Administrator","Eligible","Permanent","2025-11-17")]},
+  {h:"HR record, Jan–Mar",kv:[["Event","Leaver"],["Effective","2027-02-26"],["From","IT, Service Desk Analyst"],["Notes","Resigned"]]},
+  {h:"PIM activity, Jan–Mar",kv:[["Last activation","2027-03-05 09:12"],["Justification given","\"password reset\""],["Activations after leaving","1"]]},
+  {h:"Access request",text:"Assigned before this quarter. Covered by earlier reviews."}]},
+ sgallagher:{name:"Shane Gallagher",sub:"sgallagher@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","IT"],["Job title","Cloud Engineer"],["Employee ID","E1098"],["User type","Member"],["Status","Disabled"],["Disabled on","2027-01-29"],["Last sign-in","2027-01-29"]]},
+  {h:"PIM role assignments",roles:[R("Intune Administrator","Eligible","Permanent","2024-09-02")]},
+  {h:"HR record, Jan–Mar",kv:[["Event","Leaver"],["Effective","2027-01-29"],["From","IT, Cloud Engineer"],["Notes","Resigned"]]},
+  {h:"PIM activity, Jan–Mar",kv:[["Last activation","2027-01-21"],["Activations after leaving","None"]]},
+  {h:"Access request",text:"Assigned before this quarter. Covered by earlier reviews."}]},
+ lbyrne:{name:"Laura Byrne",sub:"lbyrne@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","Project Office"],["Job title","Project Coordinator"],["Employee ID","E1105"],["User type","Member"],["Status","Enabled"],["Last sign-in","2027-04-09"]]},
+  {h:"PIM role assignments",roles:[R("Helpdesk Administrator","Eligible","Permanent","2024-03-04")]},
+  {h:"HR record, Jan–Mar",kv:[["Event","Mover"],["Effective","2027-01-12"],["From","IT, Service Desk Analyst"],["To","Project Office, Project Coordinator"]]},
+  {h:"PIM activity, Jan–Mar",kv:[["Last activation","2026-12-18"],["Activations this quarter","None"]]},
+  {h:"Access request",text:"Assigned before this quarter. Covered by earlier reviews."}]},
+ fkerr:{name:"Fiona Kerr",sub:"Guest · Ardmore Advisory",secs:[
+  {h:"Entra account",kv:[["Sign-in name","fkerr_ardmoreadvisory.ie#EXT#"],["Company","Ardmore Advisory"],["Job title","IT Consultant"],["User type","Guest"],["Status","Enabled"],["Last sign-in","2027-04-02"]]},
+  {h:"PIM role assignments",roles:[R("Security Reader","Eligible","Ends 2027-06-30","2027-01-11")]},
+  {h:"Contract",kv:[["Contract end","2027-06-30"]]},
+  {h:"PIM activity, Jan–Mar",kv:[["Activations","3"],["MFA and justification","Given every time"]]},
+  {h:"Access request",kv:[["Ticket","RITM0050871"],["Role requested","Security Reader, until 2027-06-30"],["Line manager approval","Niamh O'Connor, 7 Jan"],["Head of IT approval","Conor Flynn, 8 Jan"]]}]},
+ jwalsh:{name:"j.walsh@vantageit.ie",sub:"Guest · Vantage IT",secs:[
+  {h:"Entra account",kv:[["Sign-in name","j.walsh_vantageit.ie#EXT#"],["Company","Vantage IT (email support provider)"],["User type","Guest"],["Status","Enabled"],["Last sign-in","2027-04-07"]]},
+  {h:"PIM role assignments",roles:[R("Exchange Administrator","Active","Permanent","2025-09-22")]},
+  {h:"Contract",kv:[["Contract","Rolling support contract, renewed yearly"],["End date","None recorded"]]},
+  {h:"PIM activity, Jan–Mar",kv:[["Exchange Administrator","Always on, so never activated"],["Days with admin sign-ins","23"]]},
+  {h:"Access request",kv:[["Ticket","RITM0044102"],["Role requested","Exchange Administrator"],["Line manager approval","Declan Moran, 19 Sep 2025"],["Head of IT approval","Conor Flynn, 19 Sep 2025"]]}]},
+ tobriain:{name:"Tadhg Ó Briain",sub:"tobriain@northbaypay.ie",secs:[
+  {h:"Entra account",kv:[["Department","IT"],["Job title","Security Analyst"],["Employee ID","E1140"],["User type","Member"],["Status","Enabled"],["Last sign-in","2027-04-09"]]},
+  {h:"PIM role assignments",roles:[R("Security Operator","Eligible","Permanent","2026-02-02"),R("Security Reader","Eligible","Permanent","2026-02-02")]},
+  {h:"HR record, Jan–Mar",text:"No HR changes this quarter."},
+  {h:"PIM activity, Jan–Mar",kv:[["Activations","6"],["MFA and justification","Given every time (\"incident triage\")"]]},
+  {h:"Access request",text:"Assigned before this quarter. Covered by earlier reviews."}]},
+ "svc-hr-provisioning":{name:"svc-hr-provisioning",sub:"Service principal (app)",secs:[
+  {h:"App",kv:[["App name","HR provisioning connector"],["Purpose","Creates and disables staff accounts from HR records"],["Owner","Declan Moran"],["Last sign-in","2027-04-09 (daily)"]]},
+  {h:"PIM role assignments",roles:[R("User Administrator","Active","Permanent","2025-05-20")]},
+  {h:"Access review",kv:[["Q4 2026 review","Approved by Conor Flynn"]]},
+  {h:"Access request",kv:[["Change","CHG-2025-052"],["Approved by","Conor Flynn, Head of IT, and Niamh O'Connor, CISO"]]}]},
+ "app-reporting-legacy":{name:"app-reporting-legacy",sub:"Service principal (app)",secs:[
+  {h:"App",kv:[["App name","Reporting (legacy)"],["Purpose","Not recorded"],["Owner","None"],["Last sign-in","2025-06-30"]]},
+  {h:"PIM role assignments",roles:[R("Global Administrator","Active","Permanent","2024-02-12")]},
+  {h:"Access review",kv:[["Q4 2026 review","Approved automatically (no response)"]]},
+  {h:"Access request",text:"No request or change record found."}]},
+ "settings-ga":{name:"Role settings: Global Administrator",sub:"PIM configuration",secs:[
+  {h:"Activation settings",kv:[["Activation maximum duration","24 hours"],["On activation, require MFA","Yes"],["Require justification","Yes"],["Require approval to activate","No"],["Approvers","None"]]},
+  {h:"Change history",kv:[["Last changed","2025-03-14"],["Changed by","Declan Moran"],["Reason","\"Migration: avoid approval delays\""]]}]},
+ "review-q4":{name:"Access review: Q4 2026",sub:"PIM access review",secs:[
+  {h:"Review settings",kv:[["Scope","All privileged directory roles"],["Reviewers","Role owners: Conor Flynn, Declan Moran"],["Duration","14 days"],["If reviewers don't respond","Approve access"]]},
+  {h:"Results",kv:[["Completed","2027-01-15"],["Decisions","14"],["Made by a reviewer","5"],["Applied automatically","9 (all \"Approve\")"],["Access removed","0"]]}]},
+ "sub-prod":{name:"Azure subscription: Northbay-Prod",sub:"Azure resource role",secs:[
+  {h:"Subscription",kv:[["Name","Northbay-Prod"],["Contains","Payment platform servers, databases and backups"]]},
+  {h:"PIM role assignments",roles:[R("Owner (Ruairí Doyle)","Active","Permanent","2025-10-01")]},
+  {h:"Notes",text:"Azure resource roles like Owner control cloud servers and data, and who can access them. They're managed in PIM separately from directory roles."},
+  {h:"Access request",text:"Assigned under CHG-2025-077 (production setup), approved by Conor Flynn."}]}
+};
+const ORDER=["cflynn","bg-admin01","dmoran","tobriain","mkelly","fkerr","settings-ga","rdoyle","svc-hr-provisioning","lbyrne","jwalsh","bg-admin02","sgallagher","app-reporting-legacy","review-q4","sub-prod"];
+const ISSUES={leaver:"Leaver still has privileged access",mover:"Mover kept old privileged access",standing:"Permanent active role (not just-in-time)",not_in_matrix:"Role not allowed for their job",ga_limit:"Too many Global Administrators",guest:"External account breaks the rules",breakglass:"Emergency access account not controlled",settings:"Activation settings too weak",review:"Access review not working",orphan:"App role with no owner or approval",no_request:"No approved request"};
+const CLAUSES={P1:"Approval",P2:"Just-in-time",P3:"Least privilege",P4:"Activation",P5:"Global Admins",P6:"Leavers and movers",P7:"External accounts",P8:"Emergency access",P9:"Access reviews",P10:"Service principals"};
+const SEVS=["Low","Medium","High","Critical"];
+const SEVHELP={Low:"Housekeeping. Little impact, even if misused.",Medium:"A real control gap, but less direct harm.",High:"Could lead to a serious breach or loss of control of the tenant.",Critical:"Harm may be happening right now."};
+const PTS={Critical:30,High:20,Medium:10,Low:5};
+const TRUTH={
+ dmoran:{title:"Standing Global Administrator outside his job role",ok:["standing","not_in_matrix","ga_limit"],cl:["P2","P3","P5"],sev:"High",why:"Global Administrator was approved for a two-week migration in March 2025 and never removed. It's permanently active, isn't in the matrix for his job, and takes Northbay to five Global Administrators."},
+ rdoyle:{title:"Privileged Role Administrator with no approval",ok:["not_in_matrix","no_request"],cl:["P3","P1"],sev:"High",why:"Privileged Role Administrator lets him give any role to anyone, including himself. It isn't in the matrix for a Cloud Engineer, and nobody approved it."},
+ mkelly:{title:"Leaver activated an admin role after leaving",ok:["leaver"],cl:["P6"],sev:"Critical",why:"She left on 26 February. Her account is still enabled, and the role was activated on 5 March. Helpdesk Administrator can reset staff passwords. This needed escalating, not just reporting."},
+ sgallagher:{title:"Leaver's role not removed",ok:["leaver"],cl:["P6"],sev:"Low",why:"The account was disabled on his last day, so nobody can activate the role. The assignment should still have been removed. It's housekeeping."},
+ lbyrne:{title:"Mover kept Helpdesk Administrator",ok:["mover","not_in_matrix"],cl:["P6","P3"],sev:"Medium",why:"She moved to the Project Office on 12 January and is still eligible for Helpdesk Administrator, three months later. She hasn't used it since moving."},
+ jwalsh:{title:"Supplier account with permanent Exchange Administrator",ok:["guest","standing"],cl:["P7","P2"],sev:"High",why:"An outside supplier's guest account is permanently active as Exchange Administrator, with no end date. Exchange Administrator can give itself access to any mailbox in the company."},
+ "bg-admin02":{title:"Emergency access account not tested or monitored",ok:["breakglass"],cl:["P8"],sev:"High",why:"Last tested 232 days ago, against a 90-day rule, and nobody is alerted when it signs in. If it were misused, nobody would know, and it might not work in a real emergency."},
+ "app-reporting-legacy":{title:"Orphaned app with Global Administrator",ok:["orphan","ga_limit"],cl:["P10","P5"],sev:"High",why:"An app nobody owns holds permanent Global Administrator, with no approval. It hasn't been used since June 2025. If its credentials leaked, an attacker would control the whole tenant."},
+ "settings-ga":{title:"Global Administrator activation too loose",ok:["settings"],cl:["P4"],sev:"High",why:"P4 requires approval for Tier 0 roles and a maximum of 8 hours. Global Administrator can be activated for 24 hours with no approval. It was loosened during the migration and never changed back."},
+ "review-q4":{title:"Access review auto-approves",ok:["review"],cl:["P9"],sev:"Medium",why:"9 of 14 decisions were approved automatically because reviewers didn't respond. The review exists, but it isn't really checking anything, which is why it missed several of these findings."}
+};
+const FINE={
+ "bg-admin01":"Emergency access accounts are the one place a permanent Global Administrator is right (P8). This one is tested, alerted and protected by a FIDO2 key.",
+ cflynn:"Global Administrator is in the matrix for Head of IT. It's eligible, and every activation was approved by the CISO.",
+ tobriain:"Both roles are in the matrix for a Security Analyst, both are eligible, and each activation had a justification.",
+ fkerr:"A guest with an eligible, read-only role that ends with her contract. Exactly what P7 asks for. It's the fix from the LedgerPoint review in action.",
+ "svc-hr-provisioning":"Apps can't use eligible assignments, so an active role is acceptable when it's approved and has an owner (P10). This one has both, and was reviewed.",
+ "sub-prod":"No clause is broken: the policy only covers directory roles. But Owner on the production subscription is as powerful as Global Administrator for cloud servers and data, and nothing in the policy controls it. That's a policy gap."
+};
+const GAP="sub-prod",ESC="mkelly",PUSH="dmoran";
+
+const AOIFE_ART=`<circle cx="200" cy="250" r="185" fill="#d7eeec"/><ellipse cx="200" cy="448" rx="95" ry="12" fill="#1b2a4a" opacity=".15"/><path d="M300 152 L292 176 L314 160 Z" fill="#fff"/><circle cx="322" cy="126" r="34" fill="#fff"/><path d="M306 127 L318 139 L340 112" fill="none" stroke="#2fa37a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><rect x="163" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><rect x="205" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><ellipse cx="174" cy="440" rx="22" ry="10" fill="#7a2e1d"/><ellipse cx="228" cy="440" rx="22" ry="10" fill="#7a2e1d"/><rect x="189" y="182" width="22" height="34" rx="8" fill="#e9b28f"/><path d="M148 228 Q200 204 252 228 L264 338 Q200 352 136 338 Z" fill="#2457a6"/><path d="M184 212 L200 262 L216 212 Z" fill="#fff"/><path d="M184 212 L200 262 L176 244 L170 220 Z" fill="#1c4585"/><path d="M216 212 L200 262 L224 244 L230 220 Z" fill="#1c4585"/><path d="M190 214 L200 268 L210 214" fill="none" stroke="#25b3a8" stroke-width="4"/><rect x="188" y="266" width="24" height="30" rx="3" fill="#fff"/><rect x="188" y="266" width="24" height="8" rx="2" fill="#25b3a8"/><rect x="193" y="280" width="14" height="3" rx="1.5" fill="#1b2a4a"/><rect x="193" y="286" width="10" height="3" rx="1.5" fill="#1b2a4a"/><path d="M248 236 L282 280 L298 222" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><line x1="300" y1="210" x2="312" y2="180" stroke="#1b2a4a" stroke-width="5" stroke-linecap="round"/><circle cx="300" cy="210" r="13" fill="#f6c9a8"/><g transform="rotate(-8 134 300)"><rect x="98" y="252" width="66" height="88" rx="6" fill="#c98a4b"/><rect x="105" y="262" width="52" height="72" rx="3" fill="#fff"/><rect x="118" y="247" width="26" height="12" rx="4" fill="#5c6670"/><path d="M110 276 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="274" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M110 296 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="294" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M111 312 l10 10 M121 312 l-10 10" stroke="#e0533d" stroke-width="3" stroke-linecap="round"/><rect x="128" y="314" width="22" height="4" rx="2" fill="#9aa6b2"/></g><path d="M152 236 L140 296" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round"/><circle cx="142" cy="304" r="13" fill="#f6c9a8"/><rect x="140" y="84" width="120" height="100" rx="40" fill="#a9432a"/><circle cx="200" cy="140" r="54" fill="#f6c9a8"/><circle cx="146" cy="146" r="9" fill="#f6c9a8"/><circle cx="254" cy="146" r="9" fill="#f6c9a8"/><path d="M146 138 Q146 84 200 82 Q256 84 256 136 Q236 106 204 108 Q178 104 162 128 Z" fill="#a9432a"/><circle cx="172" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="228" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="183" cy="145" r="4" fill="#1b2a4a"/><circle cx="217" cy="145" r="4" fill="#1b2a4a"/><circle cx="183" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><circle cx="217" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><line x1="196" y1="145" x2="204" y2="145" stroke="#1b2a4a" stroke-width="3"/><path d="M190 170 Q200 179 210 170" fill="none" stroke="#1b2a4a" stroke-width="3" stroke-linecap="round"/>`;
+const aoifeArt=(vb,cls)=>`<svg class="${cls}" viewBox="${vb}" role="img" aria-label="Aoife Brennan" xmlns="http://www.w3.org/2000/svg">${AOIFE_ART}</svg>`;
+const AOIFE_FULL=()=>aoifeArt("0 30 400 440","aoife-full");
+const AOIFE_FACE=()=>`<span class="av av-aoife">${aoifeArt("138 76 124 124","")}</span>`;
+
+/* ---------- State ---------- */
+const KEY="pim-cases-v1";
+const fresh=()=>({stage:"intro",i:0,dec:{},cred:70,escal:[],push:null,rtab:"policy",b:0,bAns:{},ret:null,mode:"training"});
+let S=fresh();
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.dec&&s.stage!=="debrief")S=Object.assign(fresh(),s)}catch(e){}
+S.mode="training";
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let tt;const toast=m=>{const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)};
+let FLAGOPEN=false;
+
+/* ---------- Briefing ---------- */
+const BRIEF=[
+ {id:"what",title:"What privileged access is",body:[
+   "Most staff have ordinary accounts. A few people hold <b>admin roles</b> that control the whole IT environment: who can sign in, what they can see, and what security settings apply.",
+   "At Northbay, these roles live in <b>Microsoft Entra ID</b>, the identity system behind Microsoft 365 and Azure. The most powerful is <b>Global Administrator</b>, which can do anything, including give itself any other access.",
+   "Attackers go after admin accounts first. One stolen admin account can mean the whole company's email, files and cloud systems."],
+  ex:"Same job as LedgerPoint: compare what people have against the policy. The difference is that here, one wrong role can hand over the whole company, not just one system.",
+  q:"Why do admin roles get their own review?",
+  opts:[["Because they cost more in licences",0,"Licences aren't the concern."],["Because one misused admin account can affect every system and every user",1,"Right. The impact is company-wide."],["Because Microsoft requires it",0,"Northbay's own policy requires it, because of the risk."]]},
+ {id:"jit",title:"Just-in-time: eligible and active",body:[
+   "<b>Privileged Identity Management (PIM)</b> lets admin roles be switched on only when needed.",
+   "<b>Eligible</b> means the person can activate the role when they need it, for a limited time, leaving a record each time. <b>Active</b> means the role is always on.",
+   "An assignment can also be <b>permanent</b> or <b>time-bound</b> (with an end date). The safe pattern for people is <b>eligible</b>: no standing admin power sitting on an account waiting to be stolen."],
+  ex:"Look closely at the assignment type. \"Active, Permanent\" on a person's account is the first thing to check.",
+  q:"Declan has Global Administrator set to Active, Permanent since a project two years ago. What's the concern?",
+  opts:[["None. He's in IT.",0,"Being in IT doesn't justify always-on Global Administrator."],["It's always on, so anyone who stole his password would instantly have full control",1,"Right. Eligible would mean activating it, with MFA and a record, only when needed."],["He should have it removed and get a shared admin account instead",0,"Shared accounts make actions untraceable. Named, eligible access is the fix."]]},
+ {id:"activation",title:"Activation controls",body:[
+   "For each role, PIM has <b>role settings</b> that control activation: require <b>MFA</b>, require a <b>justification</b>, require <b>approval</b> from someone else, and set a <b>maximum duration</b> (from 1 to 24 hours).",
+   "For the most powerful roles, approval matters most. It means a second person agrees before anyone gets full control.",
+   "Settings apply to everyone who holds the role, so one weak setting is a weakness for every holder."],
+  ex:"Don't just review who has a role. Review how that role is configured too.",
+  q:"Global Administrator can be activated for 24 hours with no approval. Northbay's policy says approval and 8 hours maximum. What is this?",
+  opts:[["A finding against the activation rule",1,"Right. The setting breaks the policy, for every person who holds the role."],["Fine, as long as people use MFA",0,"MFA is only one of the required controls."],["Only a problem if someone misuses it",0,"The control is missing either way. That's the finding."]]},
+ {id:"tier0",title:"The most powerful roles",body:[
+   "Some roles are \"Tier 0\": they can take over everything. <b>Global Administrator</b> is one. <b>Privileged Role Administrator</b> is another, because it can assign any role to anyone, <b>including themselves</b>.",
+   "Keep Tier 0 holders to a minimum. Microsoft recommends fewer than five Global Administrators. Northbay's limit is four, including the two emergency accounts.",
+   "Count every holder, including apps. An app with Global Administrator counts too."],
+  ex:"A role that can hand out other roles is as powerful as the roles it can hand out.",
+  q:"Why is Privileged Role Administrator treated like Global Administrator?",
+  opts:[["It can read everyone's email",0,"That's not what it does."],["It can give any role, including Global Administrator, to anyone, including the holder",1,"Right."],["It's only used by Microsoft",0,"It's a normal role that can be assigned in any organisation."]]},
+ {id:"breakglass",title:"Emergency access accounts",body:[
+   "If normal admin sign-in breaks (an outage, a bad security setting), you need a way back in. That's what <b>emergency access accounts</b>, or <b>break-glass accounts</b>, are for.",
+   "They're the one place a <b>permanent, active Global Administrator</b> is correct. Microsoft recommends at least two, cloud-only, protected by a phishing-resistant key (FIDO2), excluded from Conditional Access, with an alert on <b>every</b> sign-in, and tested at least every 90 days.",
+   "If one isn't tested or monitored, it's a powerful account nobody is watching."],
+  ex:"This is where people new to PIM get caught out. Permanent Global Administrator looks wrong, but here it's by design. Check the controls instead.",
+  q:"An emergency access account has permanent, active Global Administrator. What do you check?",
+  opts:[["Nothing. It should be eligible like everyone else.",0,"Emergency accounts are permanent by design, so they work when PIM or approvals don't."],["That it's tested, alerted on every sign-in and protected by strong MFA",1,"Right. The role is expected. The controls around it are what you test."],["Who uses it day to day",0,"Nobody should. It's for emergencies only."]]},
+ {id:"jml",title:"Leavers, movers and guests",body:[
+   "Same rules as LedgerPoint: <b>leavers</b> lose privileged roles on or before their last day, and <b>movers</b> lose roles they no longer need.",
+   "Severity depends on whether the access can still be used. A leaver whose account is <b>disabled</b> but still has a role assigned can't use it: that's tidy-up. A leaver whose account is <b>still enabled</b> is a real risk, and if the role was <b>used after they left</b>, harm may be happening now.",
+   "<b>Guests</b> are people from outside the company, such as suppliers and consultants. Their roles should be eligible and end when their contract ends."],
+  ex:"Check the account status first. Disabled or enabled changes everything about severity.",
+  q:"A leaver's account was disabled on their last day, but they're still eligible for an admin role. How serious is it?",
+  opts:[["Critical. Escalate it.",0,"A disabled account can't sign in, so the role can't be used."],["Low. Remove the assignment as housekeeping.",1,"Right. It breaks the rule, but nobody can use it."],["Not a finding",0,"It still breaks the leavers rule. It's just low severity."]]},
+ {id:"apps",title:"Apps and access reviews",body:[
+   "Apps can hold admin roles too, through a <b>service principal</b>. Apps can't activate roles, so their assignments are <b>active</b>. That's acceptable if the role was approved and the app has a named <b>owner</b> who's responsible for it.",
+   "An app with no owner and no recent use, still holding a powerful role, is <b>orphaned</b>. If its credentials leaked, nobody would notice.",
+   "<b>Access reviews</b> ask role owners to confirm, every quarter, that each assignment is still needed. A common setting approves access automatically if the reviewer doesn't respond, which means the review checks nothing."],
+  ex:"When you find several problems a review should have caught, look at the review itself. That's often the root cause.",
+  q:"In an access review, 9 of 14 decisions were approved automatically because reviewers didn't respond. What does that tell you?",
+  opts:[["The review is working: access was confirmed",0,"Nobody confirmed anything. The system approved it by default."],["The review isn't really happening, so problems go uncaught",1,"Right. It's a control on paper only."],["The reviewers were too busy, so it's fine",0,"Busy or not, the control failed."]]},
+ {id:"judge",title:"Severity, escalation and gaps",body:[
+   "Rate severity the same way as before: <b>what harm could this access do</b>, and <b>is it being used?</b> In Entra, most admin findings start at High, because the access is so powerful.",
+   "<b>Escalate</b> only when harm could be happening now, such as admin access used by someone who shouldn't have it.",
+   "If something is risky but no clause in the policy covers it, it's a <b>policy gap</b>, not a finding."],
+  ex:"You did this in LedgerPoint. Same judgement, bigger stakes.",
+  q:"A leaver's account is still enabled, and an admin role was activated a week after they left. What do you do?",
+  opts:[["Put it in the report as High",0,"It belongs in the report, but someone may be misusing admin access right now."],["Escalate to Aoife now, then report it as Critical",1,"Right. It could be live misuse."],["Ask the leaver what happened",0,"Not your call. Escalate so Security can act."]]}
+];
+const HINTS={
+ cflynn:"Start with three questions: is the role in the matrix for this job, is it eligible rather than active, and were activations controlled as P4 requires?",
+ "bg-admin01":"Permanent Global Administrator looks alarming. Before you decide, read P8.",
+ "settings-ga":"This case isn't an account. It's how the Global Administrator role is set up. Compare each setting with P4."
+};
+const REVIEW={cflynn:"what","bg-admin01":"breakglass","bg-admin02":"breakglass",dmoran:"jit",tobriain:"what",mkelly:"jml",fkerr:"jml","settings-ga":"activation",rdoyle:"tier0","svc-hr-provisioning":"apps",lbyrne:"jml",jwalsh:"jml",sgallagher:"jml","app-reporting-legacy":"apps","review-q4":"apps","sub-prod":"judge"};
+const cardIdx=id=>BRIEF.findIndex(c=>c.id===id);
+function brief(){
+  const c=BRIEF[S.b],ans=S.bAns[S.b];
+  const dots=BRIEF.map((x,n)=>`<button class="dot ${S.bAns[n]!=null&&BRIEF[n].opts[S.bAns[n]][1]?"ok":""}" data-bgo="${n}" aria-current="${n===S.b}" aria-label="${esc(x.title)}">${n+1}</button>`).join("");
+  const done=ans!=null&&c.opts[ans][1],last=S.b===BRIEF.length-1;
+  const back=S.ret==="debrief"?`<button class="btn" data-act="todebrief">Back to debrief</button>`:S.ret==="cases"?`<button class="btn" data-act="tocases">Back to the cases</button>`:"";
+  $("app").innerHTML=`<div class="queue">${dots}<span style="flex:1"></span>${back}${!S.ret?`<button class="btn" data-act="skipbrief">Skip to the job</button>`:""}</div>
+  <div class="sheet">
+   <div class="eyebrow">Briefing ${S.b+1} of ${BRIEF.length}</div><h1>${c.title}</h1>
+   ${c.body.map(p=>`<p>${p}</p>`).join("")}
+   <div class="aoife-note">${AOIFE_FACE()}<div><span class="tag">From Aoife</span><span>${c.ex}</span></div></div>
+   <fieldset style="gap:8px"><legend style="font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600">${esc(c.q)}</legend>
+    ${c.opts.map((o,n)=>{const picked=ans===n;const cls=picked?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"";
+      return`<button class="btn" style="text-align:left;${cls}" data-ans="${n}" ${done?"disabled":""}>${esc(o[0])}</button>`}).join("")}
+   </fieldset>
+   ${ans!=null?`<p class="small" style="margin:0;color:${c.opts[ans][1]?"var(--green)":"var(--red)"}"><b>${c.opts[ans][1]?"Correct.":"Not quite."}</b> ${esc(c.opts[ans][2])}${c.opts[ans][1]?"":" Try again."}</p>`:""}
+   <div class="row" style="justify-content:space-between"><button class="btn" data-act="bprev" ${S.b===0?"disabled":""}>Previous</button>
+    ${S.ret?(last?"":`<button class="btn primary" data-act="bnext">Next card</button>`):`<button class="btn primary" data-act="${last?"startjob":"bnext"}" ${done?"":"disabled"}>${last?"Start the job":"Next card"}</button>`}</div>
+  </div>`;
+}
+/* ---------- Render ---------- */
+function render(){renderStats();({intro,brief,cases,debrief})[S.stage]();save()}
+function renderStats(){
+  const done=Object.keys(S.dec).length,flags=Object.values(S.dec).filter(d=>d.t==="flag").length;
+  $("stats").innerHTML=`<div class="stat"><small>Cases</small><b>${done} / ${ORDER.length}</b></div><div class="stat"><small>Findings</small><b>${flags}</b></div><div class="stat"><small>Credibility</small><b>${S.cred}</b></div><div class="stat"><small>Export date</small><b>Fri 9 Apr 2027</b></div>${S.stage==="cases"?`<button class="linkbtn" data-act="openbrief">Briefing notes</button>`:""}<button class="linkbtn" data-act="restart">Restart</button>`;
+}
+function intro(){
+  $("app").innerHTML=`<div class="sheet">
+   <div class="intro-top">${AOIFE_FULL()}<div><div><b>Aoife Brennan</b><div class="small muted">GRC Manager</div></div>
+   <h1>Job 03: Privileged access review</h1></div></div>
+   <p>Good work on LedgerPoint. This one's a step up. We're reviewing <b>admin access in Microsoft Entra ID</b>, the identity system behind our Microsoft 365 and Azure. Admin roles are managed in <b>Privileged Identity Management (PIM)</b>.</p>
+   <p>Conor Flynn, our Head of IT, agreed the terms of reference, and you watched Declan export the PIM assignments on 9 April. There are <b>${ORDER.length} cases</b>: people, guests, apps, and a few that are about settings rather than accounts. Check each one against the <b>Privileged Access Policy</b> on the right, then stamp it.</p>
+   <ul><li><b>No issue</b> if it meets policy. Some things here look alarming but are correct.</li><li><b>Raise finding</b> if it breaks a clause. Pick the issue, the clause and a severity.</li><li><b>Note a policy gap</b> if something is risky but no clause covers it.</li><li>If something looks like <b>live misuse</b>, use <b>Escalate to Aoife</b> straight away.</li></ul>
+   <p>New to PIM? The <b>briefing</b> covers eligible and active roles, emergency accounts, apps and access reviews, with a quick check after each card.</p>
+   <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" data-act="beginbrief">Start the briefing</button><button class="btn" data-act="start">Skip to the job</button></div>
+   <p class="small muted" style="margin:0"><a href="${HOME}">All jobs</a></p></div>`;
+}
+function secHTML(s){
+  const field=(l,v)=>`<div><span>${esc(l)}</span><b>${esc(v||"—")}</b></div>`;
+  let body="";
+  if(s.kv)body=`<div class="kv">${s.kv.map(x=>field(x[0],x[1])).join("")}</div>`;
+  if(s.roles)body=`<div style="overflow-x:auto"><table class="pim"><thead><tr><th>Role</th><th>Assignment</th><th>Duration</th><th>Assigned</th></tr></thead><tbody>${s.roles.map(r=>`<tr><td class="m">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td class="m">${esc(r[3])}</td></tr>`).join("")}</tbody></table></div>`;
+  if(s.text)body=`<p class="none" style="margin:0">${esc(s.text)}</p>`;
+  return`<section class="sec"><h2>${esc(s.h)}</h2>${body}</section>`;
+}
+function cases(){
+  const id=ORDER[S.i],c=C[id],d=S.dec[id];
+  const queue=ORDER.map((k,n)=>`<button class="dot ${S.dec[k]?S.dec[k].t:""}" data-go="${n}" aria-current="${n===S.i}" aria-label="Case ${n+1}">${n+1}</button>`).join("");
+  const allDone=Object.keys(S.dec).length===ORDER.length;
+  $("app").innerHTML=`
+  <div class="queue">${queue}<span style="flex:1"></span>${allDone?`<button class="btn primary" data-act="finish">Submit report to Aoife</button>`:`<span class="small muted">Submit once all ${ORDER.length} are stamped</span>`}</div>
+  <div class="grid">
+   <div class="left">
+    <article class="case" aria-labelledby="ch">
+     ${d?`<span class="stamp ${d.t}">${d.t==="ok"?"No issue":d.t==="gap"?"Policy gap":"Finding"}</span>`:""}
+     <div class="casehead"><div><div class="eyebrow">Case ${S.i+1} of ${ORDER.length} · ${esc(c.sub)}</div><h1 id="ch">${esc(c.name)}</h1></div></div>
+     ${HINTS[id]?`<div class="aoife-note" style="margin-right:120px">${AOIFE_FACE()}<div><span class="tag">Hint from Aoife</span><span class="small">${HINTS[id]}</span></div></div>`:""}
+     ${c.secs.map(secHTML).join("")}
+    </article>
+    <div class="tray" id="tray">${tray(id,d)}</div>
+   </div>
+   <aside class="rules" aria-label="Rulebook">${rulebook()}</aside>
+  </div>`;
+}
+function feedback(id,d){
+  const t=TRUTH[id];let ok,head,why,extra="";
+  if(t){
+    why=t.why;
+    if(d.t==="flag"){
+      const iOk=t.ok.includes(d.issue),cOk=d.cl.some(c=>t.cl.includes(c)),sd=Math.abs(SEVS.indexOf(d.sev)-SEVS.indexOf(t.sev));
+      const notes=[];if(!iOk)notes.push(`the issue is better described as "${ISSUES[t.ok[0]]}"`);if(!cOk)notes.push(`the clause broken is ${t.cl.join(" or ")}`);if(sd)notes.push(`severity should be ${t.sev} (${SEVHELP[t.sev].replace(/\.$/,"").toLowerCase()})`);
+      ok=iOk&&cOk&&!sd?"yes":"part";head=iOk&&cOk&&!sd?"Correct. This is a finding.":iOk&&cOk?"Right finding, different severity.":"Right to raise it, but some details are off.";
+      if(notes.length)extra=`Note: ${notes.join("; ")}.`;
+    } else if(d.t==="gap"){ok="no";head="Not quite. The policy does cover this, so it's a finding."}
+    else {ok="no";head=d.dropped?"You removed this finding after Conor's pushback.":"Not quite. This one breaks the policy."}
+    if(id===ESC&&!S.escal.includes(ESC))extra+=` <b>This is also a live security issue.</b> The role was used after she left. Use <b>Escalate to Aoife</b> now.`;
+  } else if(id===GAP){
+    why=FINE[id];
+    if(d.t==="gap"){ok="yes";head="Correct. This is a policy gap."}
+    else if(d.t==="flag"){ok="no";head="Not quite. No clause covers Azure resource roles, so it can't be a finding."}
+    else {ok="no";head="Not quite. Nothing's broken, but something is missing from the policy."}
+  } else {
+    why=FINE[id];
+    if(d.t==="ok"){ok="yes";head="Correct. No issue."}
+    else if(d.t==="flag"){ok="no";head="Not quite. This one meets the policy."}
+    else {ok="no";head="Not quite. The policy covers this, and it's met."}
+  }
+  const col=ok==="yes"?"var(--green)":ok==="part"?"var(--amber)":"var(--red)",bg=ok==="yes"?"var(--green-soft)":ok==="part"?"var(--amber-soft)":"var(--red-soft)";
+  const card=REVIEW[id]!=null?BRIEF[cardIdx(REVIEW[id])]:null;
+  return`<div role="status" style="border-left:4px solid ${col};background:${bg};border-radius:0 10px 10px 0;padding:12px 14px;display:grid;gap:6px">
+    <b style="color:${col}">${head}</b><span>${esc(why)}</span>${extra?`<span class="small">${extra}</span>`:""}
+    ${ok!=="yes"&&card?`<button class="btn" style="justify-self:start" data-review="${REVIEW[id]}">Review: ${esc(card.title)}</button>`:""}</div>`;
+}
+function tray(id,d){
+  if(!FLAGOPEN&&S.mode==="training"&&d){
+    const nx=ORDER.findIndex((k,n)=>n>S.i&&!S.dec[k]),any=ORDER.findIndex(k=>!S.dec[k]);
+    return`${feedback(id,d)}<div class="trayrow"><button class="btn" data-act="prev" ${S.i===0?"disabled":""}>Previous</button><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn esc" data-act="escalate">Escalate to Aoife</button>${nx>=0||any>=0?`<button class="btn primary" data-act="nextopen">Next case</button>`:`<button class="btn primary" data-act="finish">Submit report to Aoife</button>`}</div></div>`;
+  }
+  if(!FLAGOPEN){
+    return`<div class="trayrow"><div style="display:flex;flex-wrap:wrap;gap:10px"><button class="big ok" data-stamp="ok">No issue</button><button class="big flag" data-act="openflag">Raise finding</button><button class="big gap" data-stamp="gap">Note a policy gap</button></div>
+     <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn" data-act="prev" ${S.i===0?"disabled":""}>Previous</button><button class="btn" data-act="next" ${S.i===ORDER.length-1?"disabled":""}>Skip</button><button class="btn esc" data-act="escalate">Escalate to Aoife</button></div></div>
+     ${d&&d.t==="flag"?`<p class="small muted" style="margin:0">Your finding: ${esc(ISSUES[d.issue])} · clause ${d.cl.join(", ")} · ${d.sev}. Restamp to change it.</p>`:""}`;
+  }
+  const f=d&&d.t==="flag"?d:{issue:"",cl:[],sev:""};
+  return`<fieldset><legend>What's the issue?</legend><div class="chips">${Object.entries(ISSUES).map(([v,l])=>`<label><input type="radio" name="issue" value="${v}" ${f.issue===v?"checked":""}>${l}</label>`).join("")}</div></fieldset>
+   <fieldset><legend>Which clause does it break?</legend><div class="chips mono">${Object.entries(CLAUSES).map(([c,l])=>`<label title="${l}"><input type="checkbox" name="cl" value="${c}" ${f.cl.includes(c)?"checked":""}>${c} ${l}</label>`).join("")}</div></fieldset>
+   <fieldset><legend>Severity</legend><div class="chips">${SEVS.map(s=>`<label title="${SEVHELP[s]}"><input type="radio" name="sev" value="${s}" ${f.sev===s?"checked":""}>${s}</label>`).join("")}</div>
+   <p class="small muted" style="margin:0"><b>Low</b> housekeeping · <b>Medium</b> a real gap, less direct harm · <b>High</b> could lead to a serious breach · <b>Critical</b> harm may be happening now. <button class="linkbtn" style="color:var(--accent)" data-rtab="severity">See the severity guide</button></p></fieldset>
+   <p class="err" id="err" hidden></p>
+   <div class="row"><button class="btn" data-act="cancelflag">Cancel</button><button class="big flag" data-stamp="flag">Stamp finding</button></div>`;
+}
+function rulebook(){
+  const tabs=[["policy","Policy"],["matrix","Role matrix"],["roles","Roles"],["severity","Severity"]];
+  let body="";
+  if(S.rtab==="policy")body=`<p class="note" style="padding:0 0 6px">Privileged Access Policy v1.4. Covers privileged <b>directory roles</b> in Microsoft Entra ID.</p>`+[
+   ["P1","<b>Approval.</b> Every privileged role assignment needs a ticket approved by the line manager and the Head of IT."],
+   ["P2","<b>Just-in-time.</b> Privileged roles are assigned as Eligible, not permanently Active. Exceptions: the two emergency access accounts (P8) and approved service principals (P10)."],
+   ["P3","<b>Least privilege.</b> Users may only be eligible for the roles listed for their job in the privileged role matrix."],
+   ["P4","<b>Activation.</b> Every activation needs MFA and a justification. Tier 0 roles (Global Administrator, Privileged Role Administrator) also need approval by the Head of IT or the CISO. Activations last at most 8 hours."],
+   ["P5","<b>Global Administrators.</b> No more than four holders, including the two emergency access accounts."],
+   ["P6","<b>Leavers and movers.</b> Privileged assignments removed on or before the HR leaving date. Movers lose them within 5 working days of the move."],
+   ["P7","<b>External accounts.</b> Guests may hold only Eligible assignments, ending no later than their contract end."],
+   ["P8","<b>Emergency access.</b> Two cloud-only accounts with permanent Global Administrator. Phishing-resistant MFA (FIDO2), excluded from Conditional Access, an alert to Security on every sign-in, and tested at least every 90 days."],
+   ["P9","<b>Access reviews.</b> Quarterly PIM access review of all privileged roles. Reviews must not approve access automatically when reviewers don't respond."],
+   ["P10","<b>Service principals.</b> An app with a privileged directory role needs an approved request and a named owner, and is included in the quarterly access review."]
+  ].map(c=>`<div class="clause"><b>${c[0]}</b><span>${c[1]}</span></div>`).join("")+`<p class="note"><b>Exceptions</b> must be approved by the CISO and recorded in the Exceptions Register. None are recorded for Entra ID.</p>`;
+  if(S.rtab==="matrix")body=`<p class="note" style="padding:0 0 6px">Privileged role matrix, approved by Conor Flynn, Head of IT, 6 Jan 2027. All roles Eligible.</p><table><tbody>${[["Head of IT","Global Administrator"],["IT Systems Administrator","User Administrator, Groups Administrator"],["Cloud Engineer","Application Administrator, Intune Administrator"],["Security Analyst","Security Operator, Security Reader"],["Service Desk Analyst","Helpdesk Administrator"],["External security consultant","Security Reader (time-limited)"],["Any other job","No privileged roles"]].map(r=>`<tr><td>${r[0]}</td><td class="m" style="white-space:normal">${r[1]}</td></tr>`).join("")}</tbody></table>`;
+  if(S.rtab==="roles")body=`<table><tbody>${[["Global Administrator","Full control of everything in the tenant, including giving itself any access"],["Privileged Role Administrator","Assign any role to anyone, including themselves"],["User Administrator","Create and manage users, reset passwords for non-admins"],["Groups Administrator","Create and manage groups and their members"],["Helpdesk Administrator","Reset passwords for non-admin users"],["Exchange Administrator","Full control of email, including access to any mailbox"],["Application Administrator","Manage apps, including adding credentials to them"],["Intune Administrator","Manage company devices and push software or scripts to them"],["Security Operator","Investigate and respond to security alerts"],["Security Reader","Read-only access to security information"],["Owner (Azure subscription)","Full control of cloud resources in the subscription, and who can access them"]].map(r=>`<tr><td class="m">${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</tbody></table>`;
+  if(S.rtab==="severity")body=`<p class="note" style="padding:0 0 8px">Ask two questions: <b>what could this access do?</b> and <b>is it being used?</b></p>${[
+   ["Critical","var(--red)","Harm may be happening right now.","A leaver's account is still enabled and an admin role was used after they left. Escalate it as well as reporting it."],
+   ["High","var(--red)","Could lead to a serious breach or loss of control of the tenant.","Standing Global Administrator. A supplier with always-on email admin. An emergency account nobody monitors."],
+   ["Medium","var(--amber)","A real control failure, but less direct harm.","A mover still eligible for a helpdesk role they don't use. An access review that approves by default."],
+   ["Low","var(--green)","Housekeeping. Little impact, even if misused.","A disabled leaver's account that still has a role assigned."]
+  ].map(r=>`<div class="clause" style="grid-template-columns:70px 1fr"><b style="color:${r[1]};font-family:var(--sans)">${r[0]}</b><span>${r[2]}<br><span class="muted small">Example: ${r[3]}</span></span></div>`).join("")}<p class="note">Severity is a judgement. Be ready to explain yours to Aoife.</p>`;
+  return`<div class="rtabs" role="tablist">${tabs.map(t=>`<button class="rtab" role="tab" data-rtab="${t[0]}" aria-selected="${S.rtab===t[0]}">${t[1]}</button>`).join("")}</div><div class="rbody">${body}</div>`;
+}
+
+/* ---------- Actions ---------- */
+function stamp(t){
+  const id=ORDER[S.i];
+  if(t==="flag"){
+    const issue=document.querySelector('input[name="issue"]:checked'),cl=[...document.querySelectorAll('input[name="cl"]:checked')].map(i=>i.value),sev=document.querySelector('input[name="sev"]:checked');
+    if(!issue||!cl.length||!sev){const e=$("err");e.textContent="Pick an issue, at least one clause and a severity.";e.hidden=false;return}
+    S.dec[id]={t:"flag",issue:issue.value,cl,sev:sev.value};
+  } else S.dec[id]={t};
+  FLAGOPEN=false;render();
+  if(t==="flag"&&id===PUSH&&!S.push){setTimeout(pushback,700);return}
+  if(S.mode==="training")return;
+  setTimeout(()=>{const nx=ORDER.findIndex((k,n)=>n>S.i&&!S.dec[k]),any=ORDER.findIndex(k=>!S.dec[k]);const to=nx>=0?nx:any;if(to>=0){S.i=to;render()}},650);
+}
+function pushback(){
+  S.push="open";save();
+  $("modal").innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ph">
+   <div class="who"><span class="av" style="background:#2f6f8f">CF</span><div><b>Conor Flynn</b><div class="small muted">Head of IT · owns Entra ID</div></div></div>
+   <h2 id="ph">"Declan needs that, honestly."</h2>
+   <p>If something breaks at 2am, Declan can't be waiting for an approval to come through. He's been Global Admin since the migration and it's never been a problem. I'd rather this didn't go in the report.</p>
+   <div style="display:grid;gap:8px"><button class="btn" data-push="ask">Ask if there's an approved exception, and point out what the emergency accounts are for</button><button class="btn" data-push="drop">Agree and remove the finding</button><button class="btn" data-push="escalate">Pass it to Aoife to decide</button></div></div></div>`;
+}
+function answerPush(c){
+  const reply={ask:["Conor Flynn","#2f6f8f","CF","No, there's no exception. The migration change was only meant for two weeks. And you're right, the emergency accounts are what we'd use at 2am. Leave it in. I'll move Declan to eligible this week."],
+    drop:["Conor Flynn","#2f6f8f","CF","Thanks, appreciate that."],
+    escalate:["Aoife Brennan","#2457a6","AB","Keep it in. There's no exception, and the emergency accounts cover 2am problems. Next time, ask Conor for the exception yourself first. It's quicker and builds the relationship."]}[c];
+  if(c==="ask")S.cred=Math.min(100,S.cred+6);
+  if(c==="drop")S.dec[PUSH]={t:"ok",dropped:true};
+  S.push=c;
+  $("modal").innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="rh"><div class="who">${reply[2]==="AB"?AOIFE_FACE():`<span class="av" style="background:${reply[1]}">${reply[2]}</span>`}<div><b id="rh">${reply[0]}</b></div></div><p>${reply[3]}</p><div class="row"><button class="btn primary" data-act="closepush">Back to the cases</button></div></div></div>`;
+  render();
+}
+function openEscalate(){
+  const id=ORDER[S.i];
+  $("modal").innerHTML=`<div class="scrim" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="eh">
+   <h2 id="eh">Escalate ${esc(C[id].name)} to Aoife?</h2>
+   <p class="muted">Only for something that could be causing harm right now. Everything else belongs in the report, and unnecessary escalations cost credibility.</p>
+   <div class="row"><button class="btn" data-act="close">Cancel</button><button class="btn esc" data-act="sendesc">Escalate now</button></div></div></div>`;
+}
+function sendEsc(){
+  const id=ORDER[S.i];
+  if(S.escal.includes(id)){$("modal").innerHTML="";toast("You've already escalated this one.");return}
+  S.escal.push(id);
+  const good=id===ESC;S.cred=Math.max(0,Math.min(100,S.cred+(good?12:-5)));
+  const msg=good?"Right call. Security disabled her account and ended all its sessions within fifteen minutes. The 5 March activation was used to reset the password on Brian Nolan's account. He's Head of Treasury, and he never asked for a reset. Security are now checking every payment approved from his account since then. Keep it in your report as Critical.":"Thanks for flagging, but this isn't live misuse. If it breaks the policy, put it in the report. Escalations pull Security off other work.";
+  $("modal").innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ah"><div class="who">${AOIFE_FACE()}<div><b id="ah">Aoife Brennan</b><div class="small muted">GRC Manager</div></div></div><p>${msg}</p><div class="row"><button class="btn primary" data-act="close">Back to the case</button></div></div></div>`;
+  render();
+}
+
+/* ---------- Debrief ---------- */
+const RECS={
+ leaver:"Remove the assignment now. If the account is still enabled, disable it and review activity since the leaving date. Remove privileged roles as part of the leaver process.",
+ mover:"Remove roles no longer needed for the new job. Add a privileged access check to the role-change process.",
+ standing:"Change the assignment to Eligible, so the role is activated only when needed, with MFA, justification and a record.",
+ not_in_matrix:"Remove roles not in the matrix for the person's job, or update the matrix if the job genuinely needs them.",
+ ga_limit:"Reduce Global Administrator holders to the policy limit, using more specific roles where possible.",
+ guest:"Make external assignments Eligible and time-limited, ending with the contract.",
+ breakglass:"Test the account now, set up an alert on every sign-in, and add the 90-day test to the IT calendar.",
+ settings:"Change the role settings to require approval and a maximum activation of 8 hours, as P4 requires.",
+ review:"Set the access review to remove access if reviewers don't respond, and follow up with reviewers who don't complete it.",
+ orphan:"Remove the role, or disable the app if it's no longer used. Give every privileged app a named owner and an approved request.",
+ no_request:"Raise a request for retrospective approval, or remove the role."
+};
+function reportRows(){
+  return Object.entries(S.dec).filter(([k,d])=>d.t==="flag").sort((a,b)=>SEVS.indexOf(b[1].sev)-SEVS.indexOf(a[1].sev))
+    .map(([k,d])=>({name:C[k].name,id:k,issue:ISSUES[d.issue],rule:d.cl.map(c=>`${c} ${CLAUSES[c]}`).join(", "),sev:d.sev,rec:RECS[d.issue]||""}));
+}
+function reportText(){
+  const rows=reportRows(),gaps=Object.entries(S.dec).filter(([k,d])=>d.t==="gap");
+  const L=["Privileged access review (Microsoft Entra PIM), Q1 2027","Northbay Payments","Prepared by: Junior GRC Analyst","Scope: privileged directory role assignments and settings in Microsoft Entra PIM, 1 January to 31 March 2027, tested against the Privileged Access Policy v1.4","",`Findings (${rows.length})`,""];
+  rows.forEach((r,i)=>L.push(`${i+1}. ${r.issue}: ${r.name}`,`   Rule broken: ${r.rule}`,`   Severity: ${r.sev}`,`   Recommendation: ${r.rec}`,""));
+  if(S.escal.length)L.push("Escalated during the review",...S.escal.map(k=>`- ${C[k].name}`),"");
+  if(gaps.length)L.push("Possible gaps in the policy",...gaps.map(([k])=>`- ${C[k].name}: risk not covered by the current policy`),"");
+  return L.join("\n");
+}
+function debrief(){
+  let got=0,max=0;const res=[],fps=[];let sevHi=0,sevLo=0,clBad=0;
+  for(const[k,t]of Object.entries(TRUTH)){
+    const b=PTS[t.sev];max+=b+10;const d=S.dec[k];
+    if(!d||d.t!=="flag"){res.push({k,t,s:"miss"});continue}
+    let p=t.ok.includes(d.issue)?b:Math.round(b/2);const clOk=d.cl.some(c=>t.cl.includes(c));if(clOk)p+=5;else clBad++;
+    const diff=SEVS.indexOf(d.sev)-SEVS.indexOf(t.sev),sd=Math.abs(diff);if(diff>0)sevHi++;if(diff<0)sevLo++;
+    p+=sd===0?5:sd===1?2:0;got+=p;
+    const notes=[];if(!t.ok.includes(d.issue))notes.push(`you called it "${ISSUES[d.issue]}"`);if(!clOk)notes.push(`the clause is ${t.cl.join(" or ")}`);if(sd)notes.push(`severity should be ${t.sev}`);
+    res.push({k,t,s:t.ok.includes(d.issue)&&clOk?"hit":"part",notes});
+  }
+  for(const[k,d]of Object.entries(S.dec))if(d.t==="flag"&&!TRUTH[k]){fps.push(k);got-=10}
+  max+=25;if(S.escal.includes(ESC))got+=25;
+  const badEsc=S.escal.filter(k=>k!==ESC);got-=5*badEsc.length;
+  max+=5;if(S.push==="ask")got+=5;
+  max+=10;const gp=S.dec[GAP],gapOk=gp&&gp.t==="gap";if(gapOk)got+=10;
+  const badGaps=Object.entries(S.dec).filter(([k,d])=>d.t==="gap"&&k!==GAP).map(([k])=>k);got-=5*badGaps.length;
+  const gaCount=Object.values(S.dec).some(d=>d.t==="flag"&&d.cl.includes("P5"));max+=5;if(gaCount)got+=5;
+  got=Math.max(0,got);const pct=Math.round(got/max*100);
+  const grade=pct>=85?"Ready for promotion":pct>=65?"Solid analyst work":pct>=40?"Needs another pass":"Back to basics";
+  const total=Object.keys(TRUTH).length,found=res.filter(r=>r.s!=="miss").length,escOk=S.escal.includes(ESC);
+  const names=a=>a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+  const open=pct>=85?"Excellent work. This is a hard one.":pct>=65?"Solid review of a tricky system.":pct>=40?"A decent start. PIM takes practice.":"Thanks for this. Let's go through it together before it goes anywhere.";
+  const esc1=escOk?"Escalating Mairéad Kelly straight away was the right call. Her account was used to reset the Head of Treasury's password.":"The big one: Mairéad Kelly's admin role was used after she left. That needed to come to me straight away.";
+  const sum=`You found ${found} of ${total} findings${fps.length?` and raised ${fps.length} on cases that met the policy`:", with no false alarms"}.`;
+  const pri=[];
+  if(!escOk)pri.push(["Escalate live misuse straight away","Mairéad Kelly left on 26 February, her account was still enabled, and Helpdesk Administrator was activated on 5 March. Tell your manager immediately, then report it.","judge"]);
+  if(S.push==="drop")pri.push(["Hold firm when there's no evidence","You removed Declan Moran's finding after Conor pushed back. There was no exception, and the emergency accounts cover out-of-hours problems.","jit"]);
+  const missBy={};res.filter(r=>r.s==="miss"&&!(r.k===PUSH&&S.push==="drop")).forEach(r=>{(missBy[REVIEW[r.k]]=missBy[REVIEW[r.k]]||[]).push(C[r.k].name)});
+  Object.entries(missBy).sort((a,b)=>b[1].length-a[1].length).forEach(([card,n])=>pri.push([`Missed ${n.length===1?"a finding":n.length+" findings"}: ${BRIEF[cardIdx(card)].title.toLowerCase()}`,`Look again at ${names(n)}. ${n.length===1?"It breaks":"Each one breaks"} a clause in the policy.`,card]));
+  if(fps.length)pri.push(["Check the whole clause before raising a finding",`${names(fps.map(k=>C[k].name))} met the policy. Some things in PIM look wrong but are correct, like emergency accounts and app roles.`,REVIEW[fps[0]]]);
+  if(sevHi+sevLo>=2)pri.push([sevHi>=sevLo?"You tend to rate severity too high":"You tend to rate severity too low",`${sevHi+sevLo} findings had the wrong severity. Check whether the access can actually be used: an enabled account, or a disabled one?`,"jml"]);
+  if(clBad>=2)pri.push(["Match each finding to the right clause",`${clBad} findings quoted a clause that doesn't fit.`,"what"]);
+  if(!gapOk)pri.push(["Look for gaps, not just breaches","Ruairí Doyle is permanent Owner of the production subscription. The policy only covers directory roles, so nothing controls this. That's a gap worth raising.","judge"]);
+  if(badEsc.length)pri.push(["Save escalations for live misuse",`${names(badEsc.map(k=>C[k].name))} didn't need escalating.`,"judge"]);
+  const top=pri.slice(0,3);
+  const good=[];
+  if(escOk)good.push("Escalated the live misuse straight away");
+  if(found>=7)good.push(`Found ${found} of the ${total} findings`);
+  if(!fps.length&&found>0)good.push("No false alarms, including the emergency account and the HR app that look wrong but aren't");
+  if(S.push==="ask")good.push("Handled Conor's pushback by asking for the exception");
+  if(gapOk)good.push("Spotted that Azure resource roles aren't covered by the policy");
+  if(gaCount)good.push("Counted the Global Administrators and spotted there are five");
+  const rows=reportRows();
+  const rowHTML=rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.issue)}</td><td class="m" style="white-space:normal">${esc(r.rule)}</td><td>${esc(r.sev)}</td><td class="small">${esc(r.rec)}</td></tr>`).join("");
+  const item=r=>`<div class="item ${r.s}"><span class="tag">${r.s==="hit"?"Found":r.s==="part"?"Partly right":"Missed"} · ${r.t.sev}</span><b>${esc(C[r.k].name)}: ${esc(r.t.title)}</b><span class="small muted">${esc(r.t.why)}</span>${r.notes&&r.notes.length?`<span class="small" style="color:var(--amber)">Note: ${r.notes.join("; ")}.</span>`:""}${r.s!=="hit"?`<button class="btn" style="justify-self:start;margin-top:4px" data-review="${REVIEW[r.k]}">Review: ${esc(BRIEF[cardIdx(REVIEW[r.k])].title)}</button>`:""}</div>`;
+  const nextBtn=`<button class="btn primary" data-act="restart">Play again</button>`;
+  $("app").innerHTML=`<div class="sheet" style="max-width:880px">
+   <div class="who">${AOIFE_FACE()}<div><b>Debrief from Aoife</b><div class="small muted">Privileged access review</div></div></div>
+   <div class="db-msg"><p>${open} ${esc1}</p><p>${sum}${gaCount?"":" One more thing: count the Global Administrators. There are five, and the limit is four."}${top.length?" Here's what I'd work on next.":""}</p></div>
+   ${top.length?`<div class="res"><h3>What to work on</h3><ol class="db-list">${top.map(p=>`<li><b>${p[0]}</b><span class="small muted">${p[1]}</span><button class="btn" style="justify-self:start" data-review="${p[2]}">Review: ${esc(BRIEF[cardIdx(p[2])].title)}</button></li>`).join("")}</ol></div>`:""}
+   ${good.length?`<div class="res"><h3>What you did well</h3><ul class="db-good">${good.slice(0,3).map(g=>`<li>${g}</li>`).join("")}</ul></div>`:""}
+   <div class="res"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px"><h3>Your findings report</h3><button class="btn" data-act="copyreport">Copy report</button></div>
+    <p class="small muted" style="margin:0">Copy it into a document for your portfolio. A privileged access review is a strong example to show employers.</p>
+    ${rows.length?`<div style="overflow-x:auto"><table class="db-report"><thead><tr><th>Case</th><th>Issue</th><th>Clause</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>${rowHTML}</tbody></table></div>`:`<p class="small muted" style="margin:0">You didn't raise any findings.</p>`}
+   </div>
+   <details class="db-more"><summary>Full case-by-case breakdown</summary>
+    <div class="res"><p class="small muted" style="margin:0">Score ${pct}% · <span style="font-family:var(--hand);color:var(--red)">${grade}</span></p>
+     <h3>Findings</h3>${res.map(item).join("")}
+     ${fps.length?`<h3>False alarms</h3>${fps.map(k=>`<div class="item miss"><b>${esc(C[k].name)}</b><span class="small muted">${esc(FINE[k])}</span><button class="btn" style="justify-self:start;margin-top:4px" data-review="${REVIEW[k]}">Review: ${esc(BRIEF[cardIdx(REVIEW[k])].title)}</button></div>`).join("")}`:""}
+     ${badGaps.length?`<h3>Not policy gaps</h3>${badGaps.map(k=>`<div class="item miss"><b>${esc(C[k].name)}</b><span class="small muted">${TRUTH[k]?`The policy does cover this. It's a finding: ${esc(TRUTH[k].title)}.`:esc(FINE[k])}</span></div>`).join("")}`:""}
+     <h3>Correctly cleared</h3><p class="small muted" style="margin:0">${Object.keys(FINE).filter(k=>k!==GAP&&S.dec[k]&&S.dec[k].t==="ok").map(k=>esc(C[k].name)).join(", ")||"None"}</p>
+    </div></details>
+   <div class="res"><h3>What's next</h3><p style="margin:0">Next, <a href="${STAGE2}"><b>Stage 2: report and actions</b></a>.</p>
+    <div class="row" style="justify-content:flex-start">${nextBtn}<button class="btn" data-act="review">Back to the cases</button></div></div>
+  </div>`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act],[data-stamp],[data-go],[data-rtab],[data-push],[data-ans],[data-bgo],[data-review],[data-mode]");if(!t)return;const d=t.dataset;
+  if(d.ans!=null){S.bAns[S.b]=+d.ans;render();return}
+  if(d.bgo!=null){S.b=+d.bgo;render();window.scrollTo({top:0});return}
+  if(d.mode){S.mode=d.mode;save();renderStats();return}
+  if(d.review){S.ret=S.stage==="cases"?"cases":"debrief";S.b=cardIdx(d.review);S.stage="brief";render();window.scrollTo({top:0});return}
+  if(d.stamp){stamp(d.stamp);return}
+  if(d.go){S.i=+d.go;FLAGOPEN=false;render();return}
+  if(d.rtab){S.rtab=d.rtab;save();const r=document.querySelector(".rules");if(r){r.innerHTML=rulebook();if(window.innerWidth<900)r.scrollIntoView({behavior:"smooth"})}else render();return}
+  if(d.push){answerPush(d.push);return}
+  const a=d.act;
+  if(a==="start"||a==="skipbrief"||a==="startjob"){S.stage="cases";S.ret=null;render();window.scrollTo({top:0});return}
+  if(a==="beginbrief"){S.stage="brief";S.b=0;S.ret=null;render();return}
+  if(a==="openbrief"){S.stage="brief";S.ret="cases";render();window.scrollTo({top:0});return}
+  if(a==="bnext"){S.b=Math.min(BRIEF.length-1,S.b+1);render();window.scrollTo({top:0});return}
+  if(a==="bprev"){S.b=Math.max(0,S.b-1);render();window.scrollTo({top:0});return}
+  if(a==="todebrief"){S.stage="debrief";S.ret=null;render();window.scrollTo({top:0});return}
+  if(a==="tocases"){S.stage="cases";S.ret=null;render();return}
+  if(a==="openflag"){FLAGOPEN=true;$("tray").innerHTML=tray(ORDER[S.i],S.dec[ORDER[S.i]]);const f=document.querySelector('input[name="issue"]');f&&f.focus();return}
+  if(a==="cancelflag"){FLAGOPEN=false;$("tray").innerHTML=tray(ORDER[S.i],S.dec[ORDER[S.i]]);return}
+  if(a==="prev"){S.i=Math.max(0,S.i-1);FLAGOPEN=false;render();return}
+  if(a==="next"){S.i=Math.min(ORDER.length-1,S.i+1);FLAGOPEN=false;render();return}
+  if(a==="escalate"){openEscalate();return}
+  if(a==="sendesc"){sendEsc();return}
+  if(a==="close"){if(e.target===t||t.tagName==="BUTTON")$("modal").innerHTML="";return}
+  if(a==="nextopen"){const nx=ORDER.findIndex((k,n)=>n>S.i&&!S.dec[k]),any=ORDER.findIndex(k=>!S.dec[k]);const to=nx>=0?nx:any;if(to>=0)S.i=to;render();window.scrollTo({top:0});return}
+  if(a==="closepush"){$("modal").innerHTML="";if(S.mode==="training"){render();return}const nx=ORDER.findIndex(k=>!S.dec[k]);if(nx>=0)S.i=nx;render();return}
+  if(a==="replayjob"){S=fresh();S.mode="job";S.stage="cases";FLAGOPEN=false;try{localStorage.removeItem(KEY)}catch(err){}render();window.scrollTo({top:0});return}
+  if(a==="copyreport"){const txt=reportText();const fb=()=>{$("modal").innerHTML=`<div class="scrim" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ch"><h2 id="ch">Your report</h2><p class="small muted">Select all the text and copy it.</p><textarea id="ct" style="min-height:260px;font-family:var(--mono);font-size:12px" readonly>${esc(txt)}</textarea><div class="row"><button class="btn" data-act="close">Close</button></div></div></div>`;const ta=$("ct");ta.focus();ta.select()};
+    try{navigator.clipboard.writeText(txt).then(()=>toast("Report copied. Paste it into a document."),fb)}catch(err){fb()}return}
+  if(a==="finish"){S.stage="debrief";render();window.scrollTo({top:0});return}
+  if(a==="review"){S.stage="cases";render();return}
+  if(a==="restart"){if(t.dataset.sure){S=fresh();FLAGOPEN=false;try{localStorage.removeItem(KEY)}catch(err){}$("modal").innerHTML="";render();return}
+    t.dataset.sure="1";const old=t.textContent;t.textContent="Click again to restart";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent=old}},3000);return}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("modal").innerHTML&&S.push!=="open")$("modal").innerHTML=""});
+if(S.push==="open")pushback();
+render();
+
+</script>
+<!--GLOSSARY--><script>
+/* ---------- Glossary: click a dotted term to open its explanation ---------- */
+(function(){
+const G=[
+ ["grc","GRC",/\bGRC\b(?! (Manager|Officer|Analyst))/,"Governance, risk and compliance. The work of making sure an organisation is run properly, understands its risks, and follows the laws, standards and rules that apply to it.","Checking who has access to the finance system, assessing a new supplier, or writing a security policy.","It's the umbrella name for the jobs this game prepares you for."],
+ ["framework","Framework",/\bframeworks?\b/i,"An agreed set of good practices, published by a professional body or standards organisation. Organisations use it as a checklist for doing something properly.","ISO 27001 for information security, ISACA's ITAF for IT audit, the IIA Standards for internal audit.","Frameworks tell you what good looks like. Employers expect you to know the main ones by name."],
+ ["itaf","ISACA ITAF",/\b(ISACA )?ITAF\b/,"ISACA's IT Audit Framework: standards and guidance for people who audit IT systems and controls. ISACA also runs the CISA certification.","How to plan an IT audit, gather evidence from systems, and report the results.","It's the main reference for audits like the access reviews in this game."],
+ ["iia","IIA Standards",/\bIIA( Global Internal Audit)? Standards\b/,"The Global Internal Audit Standards, published by the Institute of Internal Auditors. They set out how internal audit work should be planned, done and reported.","Every finding should state the criteria, condition, cause, effect and recommendation.","The most widely recognised standard for internal audit worldwide."],
+ ["audit","Audit",/\baudits?\b/i,"An independent check of whether something is done the way it should be, based on evidence, against agreed rules.","Testing every finance system account against the access control policy.","Audits give management and regulators confidence that controls actually work."],
+ ["portfolio","Portfolio",/\bportfolio\b/i,"A collection of real work you can show an employer, like a report you wrote or an action plan you agreed.","The findings report you copy at the end of each job.","Hard to get without experience. This game gives you one."],
+ ["accessreview","Access review",/\baccess reviews?\b/i,"A regular check that every account in a system is still needed, was properly approved, and has only the access the person's job requires.","Each quarter, the system owner confirms that everyone with access to the finance system should still have it.","One of the most common controls auditors test, and a typical first task for a junior analyst."],
+ ["rolematrix","Role matrix",/\b(privileged )?role matrix\b/i,"A table, approved by the system owner, listing which roles each job is allowed in a system.","AP Clerk: AP_Clerk role only.","It's how you tell whether someone's access fits their job."],
+ ["sod","Segregation of duties",/\bsegregation of duties\b|\bSoD\b/i,"Splitting a sensitive task so no single person can complete it from start to finish without someone else checking.","The person who creates a payment can't also approve it.","It's one of the most important controls against fraud and errors."],
+ ["leastpriv","Least privilege",/\bleast privilege\b/i,"Giving people only the access their job needs, and nothing more.","A clerk who enters invoices doesn't need the right to release payments.","Less access means less damage if an account is misused or stolen."],
+ ["jml","Joiners, movers and leavers",/\bjoiners?, movers? and leavers?\b|\bleavers?\b|\bmovers?\b/i,"People starting, changing job, or leaving. Each event should trigger an access change: new access for joiners, removal of old access for movers, removal of all access for leavers.","Someone leaves on Friday, so their access must be disabled on or before Friday.","Leaver and mover access left behind is one of the most common audit findings."],
+ ["dormant","Dormant account",/\bdormant\b/i,"An account nobody has used for a long time.","No login for 200 days.","Nobody is watching it, so misuse could go unnoticed."],
+ ["shared","Shared account",/\bshared (or generic )?accounts?\b|\bgeneric accounts?\b/i,"One login used by several people.","A \"Finance Temp\" account used by whoever is covering at month-end.","The system can't tell who actually did what, so actions are hard to trace."],
+ ["policy","Policy",/\bpolic(y|ies)\b/i,"An organisation's written, approved rules for how something must be done. Everyone has to follow it.","The Access Control Policy says leavers' access is removed on or before their last day.","In an audit, the policy is what you measure against."],
+ ["policygap","Policy gap",/\bpolicy gaps?\b|\bgaps? in the policy\b/i,"A real risk that no rule in the policy covers. It isn't a breach, because nothing is broken, but the policy should be improved.","Contractor access with no end date, when the policy doesn't require one.","Reported as an observation, with a recommendation to update the policy."],
+ ["finding","Finding",/\bfindings?\b/i,"Something an audit found that breaks an agreed rule, backed by evidence.","A leaver can still log in, which breaks the rule that access must be removed by their last day.","Findings go in the report, and each one gets an owner, an action and a date."],
+ ["severity","Severity",/\bseverity\b/i,"How serious a finding is: Low, Medium, High or Critical.","A leaver using the account after leaving is Critical. An unused read-only account is Low.","It tells the business what to fix first, and sets the deadline."],
+ ["escalate","Escalate",/\bescalat(e|ed|es|ing|ion|ions)\b/i,"Telling your manager straight away, instead of waiting for the report.","A former employee logged in last week. Tell your manager now.","Only for things that could be causing harm right now."],
+ ["exception","Exception",/\bexceptions?( register)?\b/i,"Formal, written approval to break a rule for a good reason, usually signed by a senior person such as the CISO and recorded in an exceptions register.","Approval for someone to hold two conflicting roles while covering a vacancy, with extra checks.","Without a recorded exception, \"it's always been allowed\" is still a breach."],
+ ["tor","Terms of reference",/\bterms of reference\b/i,"The agreed plan for an audit: objective, scope, criteria, evidence needed, timeline and who's involved.","Agreed with the system owner before testing starts.","It prevents arguments later about what was covered."],
+ ["scope","Scope",/\bscope\b/i,"What an audit covers and what it doesn't: the system, the time period, and anything left out.","LedgerPoint user access, July to September 2026. Service accounts out of scope.","Readers assume anything not mentioned was checked, so scope must be clear."],
+ ["scopelim","Scope limitation",/\bscope limitations?\b/i,"Something the audit should have covered but couldn't, or was asked to leave out.","Login records were only kept for 30 days, so you couldn't check who used their account earlier in the quarter.","It must be stated in the report so nobody assumes that area was checked."],
+ ["criteria","Criteria",/\bcriteria\b/i,"The rules you test against: policies, standards, matrices or laws.","Access Control Policy v3.2 and the role matrix.","No criteria, no finding. Without a rule, it's just an opinion."],
+ ["rootcause","Root cause",/\broot causes?\b/i,"The underlying reason a problem happened, as opposed to the problem itself.","Leavers keep their access because HR's leaver notices don't reach IT.","Fixing the root cause stops the same finding coming back."],
+ ["execsum","Executive summary",/\bexecutive summar(y|ies)\b/i,"A short paragraph at the top of a report for senior readers: what was reviewed, the headline result, the most serious issue and what to do.","The audit committee may read nothing else.","Write it last, in plain language."],
+ ["opinion","Overall opinion",/\boverall opinion\b/i,"A one-line rating of the whole audit, such as Satisfactory, Needs improvement or Unsatisfactory.","Unsatisfactory: one Critical and four High findings.","It's the first thing senior readers look at."],
+ ["wp","Working papers",/\bworking papers?\b/i,"The evidence and notes behind an audit, each with a reference such as WP2.","WP2: the user export, with a note of how it was checked.","Anyone should be able to check a finding by following its working paper reference."],
+ ["mgmtresp","Management response",/\bmanagement responses?\b/i,"The owner's written reply to a finding, in their own words: Agreed, Partly agreed or Not agreed.","\"Agreed. The weekly leaver check will be in place by 3 December.\"","It shows management accepts the finding and commits to fixing it."],
+ ["findingscall","Findings call",/\bfindings call\b|\bclosing meeting\b/i,"A meeting near the end of an audit where the auditor and the owners agree an action, owner and date for each finding.","Held after the draft report has been reviewed.","Its output, the action plan, is what gets followed up."],
+ ["actionplan","Action plan",/\baction (plan|tracker)s?\b/i,"The list of agreed fixes: what will be done, who owns it, by when, and the evidence that will prove it's done.","Set up a weekly check of leavers. Owner: the IT manager. Due: 3 December. Evidence: four weeks of check records.","Audit tracks it and closes each action only after checking the evidence."],
+ ["draft","Draft report",/\bdraft reports?\b/i,"The first version of an audit report, sent to the owners to check facts before it's finalised.","Sent with a cover email asking for comments by a date.","It avoids surprises and catches factual errors."],
+ ["owner","System owner",/\bsystem owners?\b/i,"The senior person ultimately accountable for a system, including who can use it.","The head of Finance owns the finance system and is ultimately accountable for it. If someone needs access, they decide yes or no. IT then sets it up.","They approve access and the role matrix, and own most audit actions for their system."],
+ ["ciso","CISO",/\bCISO\b/,"Chief Information Security Officer: the senior person responsible for information security.","Owns the security policies and approves exceptions.","Usually the policy owner, and a key reader of audit reports."],
+ ["committee","Audit committee",/\baudit committee\b/i,"A group of board members who oversee audit, risk and controls.","Receives the final report through the GRC Manager.","It's the most senior audience for an audit report."],
+ ["observation","Observation",/\bobservations?\b/i,"Something worth reporting that doesn't break a rule, such as a policy gap or an improvement.","No policy requires contractor access to have an end date.","Reported separately from findings, with no severity rating."],
+ ["entra","Microsoft Entra ID",/\b(Microsoft )?Entra( ID)?\b/,"Microsoft's cloud identity system, previously called Azure AD. It controls who can sign in to Microsoft 365 and Azure, and what they can do.","Every Northbay staff account lives in Entra ID.","Whoever controls Entra ID controls access to email, files and cloud systems."],
+ ["pim","PIM",/\bPIM\b|\bPrivileged Identity Management\b/,"Privileged Identity Management: a Microsoft Entra feature that makes admin roles \"just-in-time\". People activate a role only when they need it, for a limited time, with controls like MFA and approval.","An admin activates Global Administrator for two hours, with a justification.","It reduces standing admin access, a favourite target for attackers."],
+ ["priv","Privileged access",/\bprivileged access\b|\badmin roles?\b/i,"Access that lets someone control systems or other people's access, rather than just use them.","Global Administrator, or the right to reset passwords.","Attackers target it first, so it gets extra controls and review."],
+ ["ga","Global Administrator",/\bGlobal Administrators?\b|\bGlobal Admins?\b/,"The most powerful role in Microsoft Entra ID. It can do anything in the tenant, including give itself any other access.","Changing security settings for the whole company.","Keep holders to a minimum. Microsoft recommends fewer than five."],
+ ["jit","Just-in-time (eligible and active)",/\bjust-in-time\b|\beligible\b/i,"In PIM, an Eligible assignment means the person can switch the role on when they need it, for a limited time. An Active assignment is always on.","Eligible: activate Helpdesk Administrator for 4 hours to fix a password problem.","Always-on admin access is waiting to be stolen. Eligible is the safe default for people."],
+ ["breakglass","Emergency access (break-glass) account",/\bbreak-glass\b|\bemergency access accounts?\b|\bemergency accounts?\b/i,"A spare admin account kept for emergencies, like an outage that locks normal admins out. It has permanent Global Administrator by design.","Protected by a hardware key, alerting Security on every sign-in, tested every 90 days.","Permanent admin looks wrong but is correct here. Test the controls around it instead."],
+ ["sp","Service principal",/\bservice principals?\b/i,"The identity an app uses to sign in and act in Entra ID, like an account for software.","An HR connector that creates staff accounts automatically.","Apps can hold admin roles too, so they need an owner and a review."],
+ ["ticket","Ticket (access request)",/\b(access request )?tickets?\b|\baccess requests?\b/i,"A record in the IT service desk system asking for something to be done, such as giving someone access. An access request ticket shows who asked, which roles they need, who approved it and when IT set it up.","A request for a new starter to get the role for entering invoices, approved by their manager and the system owner, and set up on their first day.","In an access review, the ticket is your evidence that access was approved. Compare it with what the person actually has: no ticket, or more access than the ticket asked for, is a finding."],
+ ["breach","Data breach",/\bdata breach(es)?\b/i,"Personal or confidential data seen, copied, changed or lost by someone who shouldn't have it.","A former employee's account is used to export a list of staff salaries and bank details.","Data protection laws require breaches to be reported. In the EU, under the General Data Protection Regulation (GDPR), a personal data breach usually has to be reported to the regulator within 72 hours, and affected people may need to be told. Most countries have similar laws. Fines and loss of trust can follow."],
+ ["svcacct","Service account",/\bservice accounts?\b/i,"An account used by an application or automated process, not by a person.","svc_bankfeed, which loads bank statements into the finance system every night.","Service accounts are often powerful and rarely watched, and their passwords seldom change. Each one needs a named owner and a regular review."],
+ ["ca","Conditional Access",/\bConditional Access\b/,"Entra rules that decide when sign-in is allowed, such as requiring MFA or blocking unknown countries.","Admins must use MFA from a company device.","Emergency accounts are excluded so they still work if a rule goes wrong."],
+ ["mfa","MFA",/\bMFA\b/,"Multi-factor authentication: proving it's you with something more than a password, such as an app prompt or a security key.","A password plus a tap on your phone.","It stops most attacks that use stolen passwords."],
+ ["fido","FIDO2 key",/\bFIDO2\b/,"A physical security key used to sign in. It can't be phished like a password or a text code.","A USB key you touch to sign in.","Recommended for the most powerful accounts."],
+ ["tier0","Tier 0",/\bTier 0\b/,"The most powerful roles, which can take over everything else.","Global Administrator and Privileged Role Administrator.","These get the strictest controls, like approval for every activation."],
+ ["guest","Guest account",/\bguests?( accounts?)?\b/i,"An account in Entra ID for someone outside the company, like a supplier or consultant.","A consultant from Ardmore Advisory signing in with their own email.","Their access should be limited and end with their contract."],
+ ["tenant","Tenant",/\btenant\b/i,"An organisation's own space in Microsoft's cloud, holding its users, settings and data.","Northbay's Microsoft 365 and Azure tenant.","Control of the tenant means control of everything in it."]
+];
+const css=document.createElement("style");
+css.textContent=`.gterm{border-bottom:1.5px dotted var(--accent,#2457a6);cursor:help;text-decoration:none}
+.gterm:hover,.gterm:focus-visible{background:var(--accent-soft,#e8eef8);outline:none;border-radius:3px}
+#gloss{position:fixed;z-index:60;top:0;right:0;height:100%;width:min(380px,100vw);background:var(--panel,#fff);color:var(--ink,#1b2230);border-left:1px solid var(--line,#e1e6ec);box-shadow:-8px 0 24px rgba(0,0,0,.12);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;align-content:start;gap:12px;overflow:auto;transform:translateX(105%);transition:transform .2s ease;visibility:hidden}
+#gloss.open{transform:none;visibility:visible}
+#gloss .gk{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#5d6879)}
+#gloss h2{margin:0;font-size:22px}#gloss p{margin:0;line-height:1.5}
+#gloss .gb{background:var(--accent-soft,#e8eef8);border-radius:8px;padding:10px 12px;display:grid;gap:2px}#gloss .gb b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent,#2457a6)}
+#gloss .gx{justify-self:end;background:none;border:1px solid var(--line,#e1e6ec);border-radius:8px;padding:6px 10px;cursor:pointer;color:inherit;font:inherit;font-size:13px}
+@media (max-width:700px){#gloss{top:auto;bottom:0;height:auto;max-height:75vh;width:100%;border-left:0;border-top:1px solid var(--line,#e1e6ec);border-radius:16px 16px 0 0;transform:translateY(105%)}}
+@media (prefers-reduced-motion:reduce){#gloss{transition:none}}`;
+document.head.appendChild(css);
+const panel=document.createElement("aside");panel.id="gloss";panel.setAttribute("aria-label","Glossary");panel.setAttribute("role","dialog");
+document.body.appendChild(panel);
+const byKey={};G.forEach(g=>byKey[g[0]]=g);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let lastFocus=null;
+function open(k){const g=byKey[k];if(!g)return;lastFocus=document.activeElement;
+  panel.innerHTML=`<button class="gx" data-gclose>Close ✕</button><div class="gk">Glossary</div><h2>${esc(g[1])}</h2><p>${esc(g[3])}</p><div class="gb"><b>Example</b><span>${esc(g[4])}</span></div><div class="gb"><b>Why it matters</b><span>${esc(g[5])}</span></div>`;
+  wrapIn(panel,new Set([k]),true);panel.classList.add("open");panel.querySelector(".gx").focus()}
+function close(){panel.classList.remove("open");if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+document.addEventListener("click",e=>{const t=e.target.closest(".gterm");if(t){e.preventDefault();e.stopPropagation();open(t.dataset.g);return}
+  if(e.target.closest("[data-gclose]")){close();return}
+  if(panel.classList.contains("open")&&!e.target.closest("#gloss"))close()},true);
+document.addEventListener("keydown",e=>{const t=e.target.closest&&e.target.closest(".gterm");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();open(t.dataset.g)}
+  if(e.key==="Escape"&&panel.classList.contains("open")){e.stopPropagation();close()}},true);
+const SKIP="button,a,label,input,textarea,select,option,td,th,code,script,style,.gterm,#gloss,.m,.mono,.role,.dot,.stamp,.modal,.bar,.tag,.kv,.stat,.chips,summary,h1,legend,.eyebrow";
+function wrap(){wrapIn(document.querySelector(".wrap")||document.body,new Set([...document.querySelectorAll(".wrap .gterm,body>.gterm")].map(x=>x.dataset.g)),false)}
+function wrapIn(root,used,inPanel){
+  const skip=inPanel?"button,h2,.gk,.gterm":SKIP;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>!n.nodeValue.trim()||(n.parentElement&&n.parentElement.closest(skip))||(n.parentElement&&n.parentElement.closest("b")&&inPanel)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  for(const node of nodes){
+    let cur=node;
+    while(cur){
+      let best=null;
+      for(const g of G){if(used.has(g[0]))continue;const m=g[2].exec(cur.nodeValue);if(m&&(!best||m.index<best.m.index||(m.index===best.m.index&&m[0].length>best.m[0].length)))best={g,m}}
+      if(!best)break;const g=best.g,m=best.m;
+      const after=cur.splitText(m.index);const rest=after.splitText(m[0].length);
+      const sp=document.createElement("span");sp.className="gterm";sp.dataset.g=g[0];sp.tabIndex=0;sp.setAttribute("role","button");sp.title="What's this?";sp.textContent=after.nodeValue;
+      after.replaceWith(sp);used.add(g[0]);cur=rest;
+    }
+  }
+}
+let timer=null;
+const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>{obs.disconnect();wrap();obs.observe(document.body,{childList:true,subtree:true})},40)});
+wrap();obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script><!--/GLOSSARY-->
+
+</body></html>

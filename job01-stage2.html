@@ -1,0 +1,565 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LedgerPoint Report Writing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Red+Hat+Mono:wght@400;500;600&family=Kalam:wght@700&display=swap">
+<style>
+/* Layout: one case file at a time on the desk (left), the policy rulebook beside it (right), stamp tray under the case */
+:root{
+  --desk:#d9dee5; --paper:#fbfaf6; --paper-line:#e6e2d8; --panel:#ffffff; --ink:#1b2230; --muted:#5d6879; --line:#e1e6ec;
+  --bar:#1d2430; --bar-ink:#e7ebf1; --bar-muted:#9aa6b6;
+  --accent:#2457a6; --accent-soft:#e8eef8; --accent-ink:#ffffff;
+  --red:#c2412d; --red-soft:#fdf1ee; --green:#2f7d55; --green-soft:#e6f3ec; --amber:#a2650b; --amber-soft:#fff3dc;
+  --sans:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --mono:"Red Hat Mono",ui-monospace,monospace; --hand:"Kalam","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{background:var(--bar);color:var(--bar-ink);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:600}
+.brand small,.stat small{display:block;font-size:11px;color:var(--bar-muted)}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+.stat b{font-family:var(--mono);font-weight:500}
+.linkbtn{all:unset;cursor:pointer;font-size:12px;color:var(--bar-muted);text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.dot.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.dot.flag{background:var(--red-soft);color:var(--red);border-color:transparent}
+.dot.gap{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.dot[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink)}
+.dot:focus-visible{outline:2px solid var(--accent)}
+.grid{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.left{flex:999 1 560px;min-width:0;display:grid;gap:14px}
+.rules{flex:1 1 320px;max-width:440px;min-width:0;background:var(--panel);border-radius:12px;overflow:hidden}
+@media (max-width:900px){.rules{max-width:none}}
+/* case file */
+.case{position:relative;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px 14px 14px 14px;padding:20px 22px;display:grid;gap:16px;box-shadow:0 1px 0 var(--paper-line),0 8px 24px #0000000f}
+.case::before{content:"CASE FILE";position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--paper);border:1px solid var(--paper-line);border-bottom:0;border-radius:8px 8px 0 0;padding:3px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.casehead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.casehead h1{font-size:22px;margin:0;font-weight:600;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec{display:grid;gap:8px;border-top:1px dashed var(--paper-line);padding-top:12px}
+.sec h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}
+.kv div{display:grid;gap:1px;min-width:0}
+.kv span{font-size:11px;color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:500;font-size:13px;overflow-wrap:anywhere}
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.role{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.none{font-size:13px;color:var(--muted);font-style:italic}
+.stamp{position:absolute;right:22px;top:22px;font-family:var(--hand);font-size:30px;padding:2px 14px;border:3px solid currentColor;border-radius:8px;transform:rotate(-8deg);pointer-events:none;background:var(--paper)}
+.stamp.ok{color:var(--green)}.stamp.flag{color:var(--red)}.stamp.gap{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thud .25s ease-out}@keyframes thud{from{transform:rotate(-8deg) scale(1.6);opacity:0}}}
+/* tray */
+.tray{background:var(--panel);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.trayrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.big{cursor:pointer;font-family:var(--hand);font-size:22px;padding:8px 22px;border-radius:10px;border:3px solid currentColor;background:transparent}
+.big.ok{color:var(--green)}.big.flag{color:var(--red)}.big.gap{color:var(--amber)}
+.big:hover{background:var(--panel)}
+.btn{cursor:pointer;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.esc{border-color:var(--red);color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:6px}
+legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;background:var(--panel)}
+.chips label:has(input:checked){border-color:var(--red);background:var(--red-soft)}
+.chips input{accent-color:var(--red)}
+.chips.mono label{font-family:var(--mono)}
+.err{color:var(--red);font-size:13px;margin:0}
+/* rulebook */
+.rtabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+.rtab{all:unset;cursor:pointer;flex:1;text-align:center;padding:11px 6px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+.rtab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+.rtab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rbody{padding:14px 16px;display:grid;gap:2px;max-height:72vh;overflow:auto}
+.clause{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.clause b{font-family:var(--mono);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.m{font-family:var(--mono);white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);padding-top:8px}
+/* overlays */
+.scrim{position:fixed;inset:0;background:#0b0f1599;display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--panel);color:var(--ink);border-radius:12px;width:min(540px,100%);max-height:calc(100% - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.modal h2{margin:0;font-size:18px}
+.modal p{margin:0}
+.who{display:flex;gap:10px;align-items:center}
+.av{flex:0 0 34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+/* intro & debrief */
+.sheet{background:var(--paper);border:1px solid var(--paper-line);border-radius:14px;padding:24px;display:grid;gap:14px;max-width:760px}
+.sheet h1{margin:0;font-size:26px;text-wrap:balance}
+.sheet p{margin:0;max-width:65ch}
+.sheet ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.score{display:flex;flex-wrap:wrap;gap:10px}
+.score div{flex:1 1 130px;border:1px solid var(--paper-line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.score b{display:block;font-family:var(--mono);font-size:22px}
+.res{display:grid;gap:8px}
+.res h3{margin:6px 0 0;font-size:15px}
+.item{border-left:3px solid var(--line);padding:5px 0 5px 12px;display:grid;gap:2px}
+.item.hit{border-left-color:var(--green)}.item.part{border-left-color:var(--amber)}.item.miss{border-left-color:var(--red)}
+.tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.hit .tag{color:var(--green)}.part .tag{color:var(--amber)}.miss .tag{color:var(--red)}
+.small{font-size:12.5px}.muted{color:var(--muted)}
+.bigstamp{font-family:var(--hand);font-size:30px;color:var(--red);display:inline-block;border:3px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-4deg)}
+.av-aoife{background:#d7eeec;overflow:hidden;padding:0}.av-aoife svg{width:100%;height:100%;display:block}
+.who .av-aoife{flex-basis:44px;height:44px}
+.aoife-note{display:flex;gap:10px;align-items:flex-start;background:var(--amber-soft);border-radius:10px;padding:10px 12px}
+.aoife-note .av{flex:0 0 38px;height:38px}.aoife-note>div{display:grid;gap:2px;min-width:0}
+.aoife-note .tag{color:var(--amber)}
+.intro-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.intro-top>div{flex:1 1 280px;display:grid;gap:10px}
+.aoife-full{width:150px;height:auto;flex:0 0 auto}
+@media (max-width:520px){.aoife-full{width:110px}}
+.db-msg{display:grid;gap:8px;font-size:15.5px}.db-msg p{margin:0}
+.db-list{margin:0;padding-left:22px;display:grid;gap:14px}.db-list li{display:grid;gap:4px}
+.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.db-report{min-width:640px}.db-report th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line)}
+.db-more{border:1px solid var(--line);border-radius:10px;padding:10px 14px}.db-more summary{cursor:pointer;font-weight:600}.db-more[open] summary{margin-bottom:10px}
+.jobs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:16px}.jobs h3{margin:0 0 4px;font-size:15px}
+.job{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.job>div{display:grid;gap:2px;min-width:0}.job-n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.job-s{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.job.open .job-s{background:var(--green-soft);color:var(--green)}.job.locked{opacity:.75}.job.locked .job-s{background:var(--line);color:var(--muted)}
+@media (max-width:520px){.job{grid-template-columns:1fr}}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--bar);color:var(--bar-ink);padding:10px 14px;border-radius:10px;max-width:340px;font-size:13px}
+.case::before{display:none}.case{margin-top:0}
+.part{border-top:1px solid var(--line);padding-top:12px}.part legend{font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:6px}
+.opts{display:grid;gap:6px}.btn.opt[disabled]{opacity:1;cursor:default;color:var(--muted)}.btn.opt[disabled][aria-pressed="true"]{color:var(--ink)}
+.btn.opt{text-align:left;font-size:13.5px;line-height:1.4;padding:9px 12px}
+.draft{display:grid;gap:8px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}.draft h3{margin:0;font-size:15px}
+.dpart{display:grid;gap:2px;font-size:13.5px}.dpart>b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sev{font-size:11px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}.sev-Critical{background:var(--red);color:#fff}.sev-High{background:var(--red-soft);color:var(--red)}.sev-Observation{background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.db-list{margin:0;padding-left:22px;display:grid;gap:12px}.db-list li{display:grid;gap:3px}.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.evt{min-width:520px;font-size:13px;border-collapse:collapse;width:100%}.evt th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line)}.evt td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+</style>
+<header class="bar">
+  <div class="brand"><div class="logo">N</div><div><b>Northbay Payments</b><small>LedgerPoint Q3 access review · Job 01 · Stage 2</small></div><a href="index.html" style="margin-left:8px;font-size:12px;color:var(--bar-muted);white-space:nowrap">← Game home</a></div>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+const MIX=a=>{let h=7;const s=a.map(o=>o[0]).join("|");for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;const p=a.map((o,n)=>[o,n]);for(let i=p.length-1;i>0;i--){h=(Math.imul(h,1103515245)+12345)|0;const j=(h>>>8)%(i+1);[p[i],p[j]]=[p[j],p[i]]}return p};
+
+const AOIFE_ART=`<circle cx="200" cy="250" r="185" fill="#d7eeec"/><ellipse cx="200" cy="448" rx="95" ry="12" fill="#1b2a4a" opacity=".15"/><path d="M300 152 L292 176 L314 160 Z" fill="#fff"/><circle cx="322" cy="126" r="34" fill="#fff"/><path d="M306 127 L318 139 L340 112" fill="none" stroke="#2fa37a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><rect x="163" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><rect x="205" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><ellipse cx="174" cy="440" rx="22" ry="10" fill="#7a2e1d"/><ellipse cx="228" cy="440" rx="22" ry="10" fill="#7a2e1d"/><rect x="189" y="182" width="22" height="34" rx="8" fill="#e9b28f"/><path d="M148 228 Q200 204 252 228 L264 338 Q200 352 136 338 Z" fill="#2457a6"/><path d="M184 212 L200 262 L216 212 Z" fill="#fff"/><path d="M184 212 L200 262 L176 244 L170 220 Z" fill="#1c4585"/><path d="M216 212 L200 262 L224 244 L230 220 Z" fill="#1c4585"/><path d="M190 214 L200 268 L210 214" fill="none" stroke="#25b3a8" stroke-width="4"/><rect x="188" y="266" width="24" height="30" rx="3" fill="#fff"/><rect x="188" y="266" width="24" height="8" rx="2" fill="#25b3a8"/><rect x="193" y="280" width="14" height="3" rx="1.5" fill="#1b2a4a"/><rect x="193" y="286" width="10" height="3" rx="1.5" fill="#1b2a4a"/><path d="M248 236 L282 280 L298 222" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><line x1="300" y1="210" x2="312" y2="180" stroke="#1b2a4a" stroke-width="5" stroke-linecap="round"/><circle cx="300" cy="210" r="13" fill="#f6c9a8"/><g transform="rotate(-8 134 300)"><rect x="98" y="252" width="66" height="88" rx="6" fill="#c98a4b"/><rect x="105" y="262" width="52" height="72" rx="3" fill="#fff"/><rect x="118" y="247" width="26" height="12" rx="4" fill="#5c6670"/><path d="M110 276 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="274" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M110 296 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="294" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M111 312 l10 10 M121 312 l-10 10" stroke="#e0533d" stroke-width="3" stroke-linecap="round"/><rect x="128" y="314" width="22" height="4" rx="2" fill="#9aa6b2"/></g><path d="M152 236 L140 296" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round"/><circle cx="142" cy="304" r="13" fill="#f6c9a8"/><rect x="140" y="84" width="120" height="100" rx="40" fill="#a9432a"/><circle cx="200" cy="140" r="54" fill="#f6c9a8"/><circle cx="146" cy="146" r="9" fill="#f6c9a8"/><circle cx="254" cy="146" r="9" fill="#f6c9a8"/><path d="M146 138 Q146 84 200 82 Q256 84 256 136 Q236 106 204 108 Q178 104 162 128 Z" fill="#a9432a"/><circle cx="172" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="228" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="183" cy="145" r="4" fill="#1b2a4a"/><circle cx="217" cy="145" r="4" fill="#1b2a4a"/><circle cx="183" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><circle cx="217" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><line x1="196" y1="145" x2="204" y2="145" stroke="#1b2a4a" stroke-width="3"/><path d="M190 170 Q200 179 210 170" fill="none" stroke="#1b2a4a" stroke-width="3" stroke-linecap="round"/>`;
+const aoifeArt=(vb,cls)=>`<svg class="${cls}" viewBox="${vb}" role="img" aria-label="Aoife Brennan" xmlns="http://www.w3.org/2000/svg">${AOIFE_ART}</svg>`;
+const AOIFE_FULL=()=>aoifeArt("0 30 400 440","aoife-full");
+const AOIFE_FACE=()=>`<span class="av av-aoife">${aoifeArt("138 76 124 124","")}</span>`;
+
+/* ---------- Content ---------- */
+const PARTS=[["condition","Condition","What did you find?"],["criteria","Criteria","Which rule does it break?"],["cause","Cause","Why did it happen?"],["risk","Risk","What could go wrong?"],["rec","Recommendation","What should be done?"]];
+const TRAPS={rating:"Rate on severity, and always give an opinion",balance:"Note good practice, specifically and truthfully",obs:"Report risks the policy doesn't cover",scope:"Say exactly what you tested",blame:"Keep it factual, not personal",vague:"Be specific",wrong:"Quote the right rule",restate:"Cause is why, not what",overstate:"Keep the risk realistic",opinion:"Criteria must be the actual rule",offtarget:"Fix the cause, practically"};
+const TRAPHELP={rating:"The overall opinion is the first thing senior readers look at. Base it on how serious the findings are, not how many accounts were fine.",balance:"Say what worked, with specific examples. It makes the report fair, and owners take it better. But never claim more than the evidence shows.",obs:"If you found a real risk that no rule covers, report it as an observation with a recommendation to fix the policy. Leaving it out means nobody fixes it. Don't force it into a finding by citing a rule that wasn't broken.",scope:"State the system, period, rules, how many items you tested and what was out of scope. Name your evidence and how you checked it was complete. Never claim more than you tested.",blame:"Describe roles, accounts and facts. Don't blame named people or guess at motives. People get defensive and stop listening.",vague:"Use dates, account names and numbers. A reader should know exactly what you found without asking.",wrong:"Check the policy and quote the clause that actually applies.",restate:"The cause explains why the problem happened, so it can be fixed. Repeating the condition doesn't help anyone.",overstate:"State the realistic business impact. Exaggeration costs you credibility; vagueness gets ignored.",opinion:"Criteria is the written rule you tested against, not best practice or common sense.",offtarget:"A good recommendation fixes the cause, is practical, and is something the business can actually do."};
+const FINDINGS=[
+ {id:"cbyrne",title:"Leaver still active and used after leaving",sev:"Critical",who:"Ciarán Byrne · cbyrne",wp:"WP2 user export, WP3 HR leavers list, WP6 escalation record",
+  facts:"Left 28 Aug 2026 (HR). Account still Active on 9 Oct. Last login 2 Oct. Roles: AP_Approver, Supplier_Maintain. You escalated it during fieldwork.",
+  condition:[["Some leaver accounts may not have been removed on time.",0,"Too vague. Which account? How late? Was it used?","vague"],
+   ["The LedgerPoint account of a former AP Supervisor (cbyrne) was still active on 9 October 2026, 42 days after his leaving date of 28 August. It was used on 2 October 2026.",1,"Specific and factual: the account, the dates, and the fact it was used.",""],
+   ["IT failed to remove Ciarán Byrne's access because Declan didn't process the leaver.",0,"This blames a named person, and you haven't established why it happened.","blame"]],
+  criteria:[["Best practice says leaver access should be removed promptly.",0,"Criteria is the company's actual rule, not general best practice.","opinion"],
+   ["Clause 4.5: accounts unused for 90 days must be disabled.",0,"That's the dormant account rule. This is about a leaver.","wrong"],
+   ["Access Control Policy v3.2, clause 4.3: all access must be removed on or before the leaving date recorded by HR.",1,"The exact rule, quoted.",""]],
+  cause:[["IT confirmed it did not receive a leaver notification from HR for this person, and there is no check that HR leavers have been disabled in LedgerPoint.",1,"This explains why it happened, so it can be fixed.",""],
+   ["The account was not disabled when he left.",0,"That's the condition again. The cause is why it wasn't disabled.","restate"],
+   ["The employee didn't hand back his access when he left.",0,"Leavers aren't responsible for removing their own access, and this blames him.","blame"]],
+  risk:[["There is a security risk.",0,"Too vague to act on. What could actually happen?","vague"],
+   ["A former employee could approve payments and change supplier bank details, leading to fraudulent payments, and could see or copy supplier bank details. The account was used after he left, so this may already have happened.",1,"Realistic, specific, and in business terms.",""],
+   ["The regulator could shut the company down.",0,"Overstated. Exaggeration undermines a real, serious finding.","overstate"]],
+  rec:[["Disable all LedgerPoint accounts until a full review is complete.",0,"Stopping all payments isn't practical or proportionate.","offtarget"],
+   ["IT should be more careful with leavers.",0,"Not specific or measurable. What exactly should change?","vague"],
+   ["Disable the account immediately and review all its activity since 28 August. Introduce a weekly check of HR's leaver list against LedgerPoint accounts.",1,"Fixes the account and the cause behind it.",""]]},
+ {id:"mdoherty",title:"Segregation of duties conflict",sev:"High",who:"Mark Doherty · mdoherty",wp:"WP2 user export, WP5 role and SoD matrices, WP7 exceptions register",
+  facts:"Senior AP Clerk covering the vacant AP Supervisor role. Roles: AP_Clerk, AP_Approver. Sinéad says it was agreed verbally. No exception recorded.",
+  condition:[["Mark Doherty has been approving his own payments.",0,"You haven't shown he did. You found he can. Accusing someone without evidence is a serious mistake.","blame"],
+   ["The account of a Senior AP Clerk (mdoherty) holds both AP_Clerk and AP_Approver, so the same person can create and approve payment requests. No approved exception is recorded.",1,"States exactly what you found, without accusing anyone.",""],
+   ["There are some access issues in Accounts Payable.",0,"Too vague. What issues, and on which account?","vague"]],
+  criteria:[["The Financial Controller agreed this verbally.",0,"That's the business's explanation, not the rule you tested against.","opinion"],
+   ["Clause 4.7: no account may hold roles listed as a conflict in the SoD matrix (AP_Clerk with AP_Approver). Section 5: exceptions need CISO approval and must be recorded.",1,"The rule broken, plus the exception rule that wasn't followed.",""],
+   ["Clause 4.3: leaver access must be removed.",0,"Wrong rule. Mark is still employed.","wrong"]],
+  cause:[["He has two conflicting roles.",0,"That's the condition again, not why it happened.","restate"],
+   ["The SoD matrix is too strict for a small team.",0,"That's an opinion, not the cause. If the matrix is wrong, raise that separately.","opinion"],
+   ["Approval rights were added when he began covering the vacant AP Supervisor role. The arrangement was agreed verbally and never went through the exception process.",1,"Explains how it happened and points to what needs fixing.",""]],
+  risk:[["One person could create and approve a payment, for example to a fake supplier, without anyone else checking it.",1,"Describes what the access allows, without accusing the person.",""],
+   ["Mark could commit fraud.",0,"Naming him makes it personal. Describe what the access allows, not what he might do.","blame"],
+   ["This breaks clause 4.7.",0,"That's the criteria. Risk is what could go wrong for the business.","restate"]],
+  rec:[["Discipline the employee.",0,"Discipline isn't audit's call, and the problem is the process, not the person.","offtarget"],
+   ["Remove AP_Approver from this account. If cover is genuinely needed, record a CISO-approved exception with an independent monthly review of the payments he approves.",1,"Practical, and gives the business a proper route if cover is genuinely needed.",""],
+   ["Review the situation.",0,"Too vague. Review what, by when, and then do what?","vague"]]},
+ {id:"ecoyle",title:"Access exceeds what was approved",sev:"High",who:"Emma Coyle · ecoyle",wp:"WP2 user export, WP4 ticket RITM0041217, WP5 SoD matrix",
+  facts:"Joined 7 Sep 2026 as AP Clerk. Ticket RITM0041217 approved AP_Clerk only. Account has AP_Clerk and AP_Approver.",
+  condition:[["A new AP Clerk (ecoyle) was given AP_Clerk and AP_Approver. The approved request (RITM0041217) was for AP_Clerk only.",1,"Specific, and it cites the evidence.",""],
+   ["A new starter has too much access.",0,"Too vague. Which roles, and compared with what?","vague"],
+   ["A new starter has no access request.",0,"Not true. There is a ticket. The problem is the extra role.","wrong"]],
+  criteria:[["It's common sense that people shouldn't approve their own work.",0,"Criteria must be the written rule.","opinion"],
+   ["Clause 4.4: movers' access must be updated.",0,"Wrong rule. Emma is a joiner.","wrong"],
+   ["Clause 4.1: access provisioned must match the access approved. Clause 4.7: AP_Clerk with AP_Approver is a conflict.",1,"Both rules this breaks.",""]],
+  cause:[["IT ignored the ticket.",0,"Blames a team without evidence of why it happened.","blame"],
+   ["The extra role was added at setup without approval, and nobody checks that the access given matches the ticket before it's closed.",1,"Points to the missing check, which is what needs fixing.",""],
+   ["She has a role she wasn't approved for.",0,"That's the condition again.","restate"]],
+  risk:[["Emma might make mistakes.",0,"Makes it personal, and misses the real risk.","blame"],
+   ["All new starters are a fraud risk.",0,"Overstated and unfair.","overstate"],
+   ["A new employee could create and approve payments alone, and nobody has confirmed she needs approval rights.",1,"Realistic and specific.",""]],
+  rec:[["Remove AP_Approver from this account. Add a check that the roles given match the approved ticket before the request is closed.",1,"Fixes the account and the gap in the process.",""],
+   ["Retrain Emma.",0,"She didn't give herself the access. Fix the process.","offtarget"],
+   ["Stop hiring AP clerks until this is fixed.",0,"Not proportionate or practical.","offtarget"]]},
+ {id:"fin.temp01",title:"Shared account in use",sev:"High",who:"Finance Temp · fin.temp01",wp:"WP2 user export, WP3 HR records (no match), WP4 tickets (none found)",
+  facts:"No employee ID or job title. Role: AP_Clerk. Created 1 Sep 2026, no access request. Last login 30 Sep. Finance confirmed it was set up for temporary staff at month-end.",
+  condition:[["There's a generic account.",0,"Too vague. Which account, what can it do, and is it used?","vague"],
+   ["Temporary staff are sharing passwords and logging in as each other.",0,"You know it's shared, but not exactly how it's used. Stick to what the evidence shows.","overstate"],
+   ["A shared account (fin.temp01) with no named owner or employee ID holds AP_Clerk. It was created on 1 September 2026 without an access request and was last used on 30 September 2026.",1,"Specific and factual.",""]],
+  criteria:[["Clause 4.6: shared or generic accounts used by people are prohibited. Clause 4.1: all access needs an approved request.",1,"Both rules this breaks.",""],
+   ["Industry best practice discourages shared accounts.",0,"True, but criteria must be the company's own rule.","opinion"],
+   ["Clause 4.8: privileged access.",0,"Wrong rule. This account has no privileged access.","wrong"]],
+  cause:[["Temps are careless with passwords.",0,"Blames people, and isn't the cause.","blame"],
+   ["The account was set up to cover temporary staff at month-end, outside the normal access request process.",1,"Explains why it exists, so the process can be fixed.",""],
+   ["It's a shared account.",0,"That's the condition again.","restate"]],
+  risk:[["It breaks clause 4.6.",0,"That's the criteria. What could go wrong?","restate"],
+   ["Payment requests made with this account are hard to trace to a person, so errors or fraud could go unnoticed and be difficult to investigate.",1,"The real business impact.",""],
+   ["Hackers will definitely use it.",0,"Speculative and overstated.","overstate"]],
+  rec:[["Change its password every month.",0,"Doesn't fix the problem. It's still shared.","offtarget"],
+   ["Disable fin.temp01. Give temporary staff their own named, time-limited accounts through the normal request process.",1,"Fixes the account and the process gap.",""],
+   ["Stop using temporary staff in Finance.",0,"Not audit's decision, and not necessary.","offtarget"]]}
+];
+const TESTS=[
+ "Leavers: matched HR's leavers list to active accounts and checked each was disabled on or before the leaving date (4.3).",
+ "Movers: checked old access was removed within 5 working days of a role change (4.4).",
+ "Approvals: traced every account and role to an approved access request (4.1).",
+ "Least privilege: checked each account's roles against the role matrix for the person's job (4.2).",
+ "Segregation of duties: checked role combinations against the SoD matrix and looked for approved exceptions (4.7).",
+ "Dormant accounts: checked for accounts unused for over 90 days, and that staff on long leave were Suspended (4.5).",
+ "Shared accounts: checked for accounts with no employee ID or no match in HR records (4.6).",
+ "Privileged access: checked Sys_Admin, LedgerPoint's privileged role, is held only by the two permitted IT roles (4.8)."];
+const SCOPE={q:"Which scope statement should go in the report?",opts:[
+ ["All Northbay finance systems and user access for 2026.",0,"Overstated. You tested LedgerPoint only, for one quarter. Never claim more than you tested.","scope"],
+ ["LedgerPoint user access for Q3 2026 (1 July to 30 September), tested against Access Control Policy v3.2. All 17 user accounts in the export of 9 October 2026 were tested. Service accounts, database and server access, and other finance systems were out of scope.",1,"Right. System, period, rules, population and what's out of scope. The reader knows exactly what the report covers.",""],
+ ["A sample of 5 LedgerPoint accounts was reviewed.",0,"Not what you did. You tested all 17 accounts, the full population. That's stronger evidence, so say so.","scope"]]};
+const APPROACH={q:"How should the report describe the evidence used?",opts:[
+ ["We checked LedgerPoint access.",0,"Too vague. Which evidence, compared with what?","vague"],
+ ["We used the user export from IT and assumed it was correct.",0,"An export you haven't checked could be missing accounts. Say how you confirmed it was complete.","scope"],
+ ["We compared the LedgerPoint user export (9 October 2026) with HR's joiner, mover and leaver records, access request tickets, the role matrix and the SoD matrix. Audit checked the 17 accounts against the user count in the LedgerPoint admin console, and checked the report settings had no filters, to confirm it was complete.",1,"Right. It names the evidence and shows the data can be trusted. A report is only as reliable as the data behind it.",""]]};
+const OBS={q:"Fiona Kerr's access broke no rule, but you noted a policy gap. How should it go in the report?",opts:[
+ ["Leave it out. No rule was broken, so it isn't a finding.",0,"Readers need to know about risks the policy doesn't cover. That's exactly what an observation is for.","obs"],
+ ["Raise it as a High finding against clause 4.3 (leavers).",0,"4.3 isn't broken: Fiona hasn't left. Never cite a rule that wasn't broken.","wrong"],
+ ["Observation (not rated): Contractor and consultant access in LedgerPoint doesn't always have an end date. Fiona Kerr's consultant account (fkerr) has none set. Contractors aren't on HR's leavers list, so nothing would remove their access when a contract ends. No policy clause currently requires an end date. Recommendation: Update the Access Control Policy to require an end date for all contractor and consultant access, and set end dates on current contractor accounts.",1,"Right. It's reported, it's clear no rule was broken, and the recommendation fixes the gap in the policy.",""]]};
+const OPINION={q:"Northbay rates each audit Satisfactory, Needs improvement or Unsatisfactory. What's your overall opinion?",opts:[
+ ["Satisfactory. Only 7 of the 17 accounts had problems.",0,"Rate on severity, not the count. A Critical issue alone means the controls failed.","rating"],
+ ["Unsatisfactory. One Critical and four High findings show that access controls over LedgerPoint are not working as intended.",1,"Right. A former employee used the system after leaving, and several High risks sit in payments. The controls aren't working.",""],
+ ["No overall opinion. Let readers judge for themselves.",0,"Senior readers rely on the opinion. It's the first thing the audit committee reads.","rating"]]};
+const GOOD={q:"Should the report mention anything that worked well?",opts:[
+ ["No. An audit report is for problems.",0,"Balanced reports note what works. It's fairer, and owners are more likely to engage.","balance"],
+ ["Good practice: some controls worked as intended. A leaver's account (pgill) was disabled on his last day, an account for staff on long leave (omurphy) was correctly suspended, and a contractor's access (treilly) has a recorded end date.",1,"Right. Specific, true, and it shows the process can work when it's followed.",""],
+ ["Overall, access control in LedgerPoint is working well.",0,"Not true: there are seven breaches. Good practice must be specific and backed by evidence.","balance"]]};
+const EVID=[
+ ["WP1","Terms of reference, agreed and signed","Aoife Brennan and Sinéad Walsh","2 Oct 2026"],
+ ["WP2","LedgerPoint user export (17 accounts) and report settings screenshot; count checked against the admin console","Declan Moran, IT","9 Oct 2026"],
+ ["WP3","HR joiners, movers and leavers list, Q3 2026","Gavin Ryan, HR","8 Oct 2026"],
+ ["WP4","Access request tickets raised in Q3 2026","IT service desk","8 Oct 2026"],
+ ["WP5","Role matrix (approved 15 Jan 2026) and SoD matrix","Sinéad Walsh, Finance","5 Oct 2026"],
+ ["WP6","Escalation record, and check confirming cbyrne disabled","Audit, with Declan Moran","12 Oct 2026"],
+ ["WP7","Exceptions Register extract (no LedgerPoint entries)","Niamh O'Connor, CISO","8 Oct 2026"],
+ ["WP8","Access Control Policy v3.2","Niamh O'Connor, CISO","5 Oct 2026"]];
+const evidHTML=()=>`<div class="draft"><div class="eyebrow">Appendix: Evidence reviewed</div><div style="overflow-x:auto"><table class="evt"><thead><tr><th>Ref</th><th>Evidence</th><th>Provided by</th><th>Date</th></tr></thead><tbody>${EVID.map(r=>`<tr><td class="m">${r[0]}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td class="m" style="white-space:nowrap">${r[3]}</td></tr>`).join("")}</tbody></table></div></div>`;
+const evidText=()=>["APPENDIX: EVIDENCE REVIEWED","Ref\tEvidence\tProvided by\tDate",...EVID.map(r=>r.join("\t"))];
+const ROOT={q:"Several findings share a root cause. Which statement captures it best?",opts:[
+ ["Staff in Accounts Payable don't follow the rules.",0,"Blames people. Most of these issues came from process gaps, not individuals.","blame"],
+ ["Joiner, mover and leaver changes aren't reliably reflected in LedgerPoint, and the quarterly access review hasn't been catching them.",1,"Right. The leaver, mover and joiner findings all trace back to this, and the review should have caught them.",""],
+ ["LedgerPoint is an insecure system.",0,"The system isn't the problem. How access is managed in it is.","overstate"]]};
+const SUMMARY={q:"Pick the best executive summary for the audit committee.",opts:[
+ ["cbyrne active post-leave (AP_Approver, Supplier_Maintain), mdoherty AP_Clerk+AP_Approver (4.7), ecoyle excess role (4.1), fin.temp01 generic (4.6), lquinn mover (4.4), afitzgerald no ticket, rkelly dormant.",0,"Too technical. The audit committee needs the message, not account IDs.","vague"],
+ ["Access control in Finance is out of control. IT and HR have repeatedly failed to do their jobs and urgent action is needed across the board.",0,"Alarmist and blaming. It will put people on the defensive.","blame"],
+ ["We reviewed all 17 LedgerPoint accounts against the Access Control Policy for Q3 2026 and found 7 breaches. One was Critical: a former employee's account was used after he left. It was escalated and has been disabled. Most findings share one cause: joiner, mover and leaver changes aren't reliably reaching LedgerPoint. We recommend a regular check of HR records against LedgerPoint and a stronger quarterly review.",1,"Clear, balanced and actionable: scope, headline, cause, recommendation.",""]]};
+
+/* ---------- State ---------- */
+const KEY="ledgerpoint-report-v1";
+const fresh=()=>({stage:"intro",mode:"training",b:0,bAns:{},f:0,ans:{},scope:null,appr:null,root:null,obs:null,good:null,opin:null,sum:null});
+let S=fresh();
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.ans&&s.stage!=="debrief")S=Object.assign(fresh(),s)}catch(e){}
+S.mode="training";
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let tt;const toast=m=>{const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)};
+const key=(f,p)=>FINDINGS[f].id+"|"+p;
+
+/* ---------- Briefing ---------- */
+const BRIEF=[
+ {title:"What an audit report is for",body:["Fieldwork finds the problems. The report gets them fixed.","It's read by people who weren't there: the system owner, senior managers and the audit committee. It has to make sense on its own, without you in the room to explain it.","A good report is <b>accurate</b>, <b>fair</b> and <b>easy to act on</b>."],
+  ex:"Write every finding so that someone who has never seen LedgerPoint understands what's wrong and what to do about it.",
+  q:"Who is the audit report mainly for?",opts:[["The auditor, as a record of their work",0,"That's what your working papers are for. The report is for the people who must understand the problems and act on them."],["The people who need to understand the problems and fix them",1,"Right. The report is read by people who weren't there: the system owner, senior managers and the audit committee. If they can't understand what's wrong and what to do, nothing gets fixed, and the work you did in fieldwork is wasted."],["The IT team only",0,"Many readers aren't technical, including the system owner and the audit committee. Write so anyone can understand what's wrong and why it matters."]]},
+ {title:"The five parts of a finding",body:["Every finding answers five questions:","<b>Condition:</b> what did you find?<br><b>Criteria:</b> which rule does it break?<br><b>Cause:</b> why did it happen?<br><b>Risk:</b> what could go wrong?<br><b>Recommendation:</b> what should be done?","<b>Example (Ronan Kelly):</b> Condition: an Operations Analyst's read-only account (rkelly) has not been used since 12 March 2026 but is still active. Criteria: clause 4.5, accounts unused for 90 days must be disabled. Cause: there's no regular check for unused accounts. Risk: an unwatched account could be misused without anyone noticing, though it can only view reports. Recommendation: disable it, and run a monthly check for accounts unused for 90 days.","Each finding also lists its <b>evidence</b>: references to the working papers that prove it, such as WP2 for the user export. Anyone checking your work can go straight to the proof."],
+  ex:"The most common mistake is repeating the condition as the cause. The cause explains <b>why</b>, so it can be fixed.",
+  q:"\"There is no check that HR leavers have been disabled in LedgerPoint.\" Which part of a finding is this?",opts:[["Condition",0,"The condition is what you found on the account, such as 'a leaver's account is still active'. This sentence explains why that happened, so it's the cause."],["Cause",1,"Right. It explains why the problem happened: nobody checks HR's leaver list against LedgerPoint. That's what makes it useful, because fixing the cause stops the same finding coming back next quarter."],["Risk",0,"Risk is what could go wrong as a result, such as a former employee making payments. This sentence explains why the problem happened, so it's the cause."]]},
+ {title:"Writing findings well",body:["<b>Facts, not blame.</b> Describe roles, accounts and evidence. Don't name and shame people or guess at motives.","<b>Specific.</b> Dates, account names and numbers. \"Some accounts\" tells the reader nothing.","<b>Realistic risk.</b> State the business impact plainly. Exaggeration costs credibility; vagueness gets ignored.","<b>Practical recommendations</b> that fix the cause and that the business can actually do."],
+  ex:"If the person you're writing about read your finding, would they find it fair? They will read it.",
+  q:"Which is the better condition?",opts:[["\"Mark has been approving his own payments.\"",0,"You found he <b>can</b>, not that he <b>did</b>. Claiming more than the evidence shows is unfair to him, and the whole finding gets challenged. Never state more than you can prove."],["\"The account holds both AP_Clerk and AP_Approver, so the same person can create and approve payments.\"",1,"Right. It states exactly what you found: which roles, on which account, and what that allows. It doesn't claim he misused it, because you have no evidence he did. Stick to what you can prove, and the finding is hard to argue with."],["\"There are access issues in AP.\"",0,"Too vague to act on. Which account, which roles, and what's wrong with them? The reader should know exactly what you found without asking."]]},
+ {title:"Scope and approach",body:["Before the findings, a report says <b>what you tested and how</b>. Without it, readers can't tell what the report covers or how far to trust it.","<b>Scope:</b> the system, the period, the rules you tested against, how many items you tested (all of them, or a sample) and what was <b>out of scope</b>.","<b>Approach:</b> the evidence you used and the tests you ran. Also say how you checked the data was complete. A report is only as reliable as the data behind it."],
+  ex:"Only claim what you tested. If the report says \"all finance systems\" and you only looked at one, readers will assume the others are fine.",
+  q:"Why does a report say what was out of scope?",opts:[["To make the report look thorough",0,"It's not about appearances. It stops readers assuming areas you didn't test are fine."],["So nobody assumes those areas were checked and are fine",1,"Right. If the report says nothing about an area, readers assume it was checked and passed. Saying clearly what wasn't covered protects them from false comfort, and protects you if a problem later turns up there."],["Because auditors aren't allowed to test some systems",0,"Usually it's just a scoping decision about time and risk. Whatever the reason, readers need to know what wasn't covered."]]},
+ {title:"The big picture",body:["When several findings have the same cause, say so. Fixing one root cause can clear several findings at once, and it's what senior readers care about most.","Most reports give an <b>overall opinion</b>, such as Satisfactory, Needs improvement or Unsatisfactory, based on how serious the findings are. They also note <b>good practice</b>: specific things that worked.","The <b>executive summary</b> sits at the top of the report. In a few sentences: what you reviewed, the headline result, the most serious issue, the common cause, and what you recommend.","Keep it free of jargon and account IDs. The audit committee may read nothing else."],
+  ex:"Write the executive summary last, once you know what the findings add up to.",
+  q:"What belongs in an executive summary?",opts:[["Every account ID and role you found",0,"That detail belongs in the findings. The summary is for senior readers who need the headline, not the account list."],["The scope, headline result, most serious issue, common cause and recommendation",1,"Right. Senior readers may read nothing else, so give them the essentials in a few plain sentences: what was reviewed, the headline result, the most serious issue, the common cause, and what to do about it."],["Who was to blame",0,"Reports focus on fixing problems, not blaming people. Naming and shaming makes owners defensive, and then nothing gets fixed."]]}
+];
+
+/* ---------- Render ---------- */
+function render(){renderStats();({intro,brief,finding,wrap,debrief})[S.stage]();save()}
+function renderStats(){
+  const done=Object.keys(S.ans).length,tot=FINDINGS.length*5;
+  $("stats").innerHTML=`<div class="stat"><small>Parts written</small><b>${done} / ${tot}</b></div><div class="stat"><small>Stage</small><b>2 of 5</b></div><button class="linkbtn" data-act="restart">Restart</button>`;
+}
+function intro(){
+  $("app").innerHTML=`<div class="sheet">
+   <div class="intro-top">${AOIFE_FULL()}<div><div><b>Aoife Brennan</b><div class="small muted">GRC Manager</div></div><h1>Stage 2: Write the report</h1></div></div>
+   <p>Fieldwork's done. Good work on that. Now we turn your findings into a report Sinéad, the CFO and the audit committee can act on.</p>
+   <p>I've picked <b>four findings</b> to write up properly. For each one, choose the best wording for its five parts: condition, criteria, cause, risk and recommendation. Your draft report builds up on the right as you go. Then you'll set out the scope and approach, identify the root cause and choose the executive summary.</p>
+   <p>New to report writing? Do the <b>short briefing</b> first.</p>
+   <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" data-act="beginbrief">Start the briefing</button><button class="btn" data-act="start">Skip to writing</button></div>
+   <p class="small muted" style="margin:0">Haven't done the fieldwork yet? <a href="job01-stage1.html">Play Stage 1: the access review</a> first. · <a href="job01.html">All Job 01 stages</a></p></div>`;
+}
+function brief(){
+  const c=BRIEF[S.b],ans=S.bAns[S.b],done=ans!=null&&c.opts[ans][1],last=S.b===BRIEF.length-1;
+  $("app").innerHTML=`<div class="queue">${BRIEF.map((x,n)=>`<button class="dot ${S.bAns[n]!=null&&BRIEF[n].opts[S.bAns[n]][1]?"ok":""}" data-bgo="${n}" aria-current="${n===S.b}" aria-label="${esc(x.title)}">${n+1}</button>`).join("")}<span style="flex:1"></span><button class="btn" data-act="start">Skip to writing</button></div>
+  <div class="sheet"><div class="eyebrow">Briefing ${S.b+1} of ${BRIEF.length}</div><h1>${c.title}</h1>${c.body.map(p=>`<p>${p}</p>`).join("")}
+   <div class="aoife-note">${AOIFE_FACE()}<div><span class="tag">From Aoife</span><span>${c.ex}</span></div></div>
+   <fieldset style="gap:8px"><legend style="font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600">${c.q}</legend>
+    ${MIX(c.opts).map(([o,n])=>{const pk=ans===n,st=pk?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"";return`<button class="btn" style="text-align:left;${st}" data-ans="${n}" ${done?"disabled":""}>${o[0]}</button>`}).join("")}</fieldset>
+   ${ans!=null?`<p class="small" style="margin:0;color:${c.opts[ans][1]?"var(--green)":"var(--red)"}"><b>${c.opts[ans][1]?"Correct.":"Not quite."}</b> ${c.opts[ans][2]}${c.opts[ans][1]?"":" Try again."}</p>`:""}
+   <div class="row" style="justify-content:space-between"><button class="btn" data-act="bprev" ${S.b===0?"disabled":""}>Previous</button><button class="btn primary" data-act="${last?"start":"bnext"}" ${done?"":"disabled"}>${last?"Start writing":"Next card"}</button></div></div>`;
+}
+function partHTML(fi,p){
+  const F=FINDINGS[fi],k=key(fi,p[0]),a=S.ans[k],lock=S.mode==="training"&&a!=null;
+  const opts=MIX(F[p[0]]).map(([o,n])=>{let st="";if(a===n){st=S.mode==="training"?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"background:var(--accent-soft);border-color:var(--accent)"}
+    return`<button class="btn opt" style="${st}" data-pick="${fi}|${p[0]}|${n}" ${lock?"disabled":""} aria-pressed="${a===n}">${esc(o[0])}</button>`}).join("");
+  let fb="";if(S.mode==="training"&&a!=null){const o=F[p[0]][a];fb=`<p class="small" style="margin:0;color:${o[1]?"var(--green)":"var(--red)"}"><b>${o[1]?"Good choice.":"Not the best."}</b> ${esc(o[2])}${o[1]?"":` The better wording: <i>${esc(F[p[0]].find(x=>x[1])[0])}</i>`}</p>`}
+  return`<fieldset class="part"><legend><b>${p[1]}</b> <span class="muted">· ${p[2]}</span></legend><div class="opts">${opts}</div>${fb}</fieldset>`;
+}
+function draftHTML(fi){
+  const F=FINDINGS[fi];
+  return`<div class="draft"><div class="eyebrow">Draft report · Finding ${fi+1}</div><h3>${esc(F.title)} <span class="sev sev-${F.sev}">${F.sev}</span></h3>
+   ${PARTS.map(p=>{const a=S.ans[key(fi,p[0])];return`<div class="dpart"><b>${p[1]}</b>${a!=null?`<span>${esc(F[p[0]][a][0])}</span>`:`<span class="muted small">Not written yet</span>`}</div>`}).join("")}<div class="dpart"><b>Evidence</b><span class="small m">${esc(F.wp)}</span></div></div>`;
+}
+function finding(){
+  const fi=S.f,F=FINDINGS[fi],all=PARTS.every(p=>S.ans[key(fi,p[0])]!=null);
+  $("app").innerHTML=`<div class="queue">${FINDINGS.map((x,n)=>{const c=PARTS.filter(p=>S.ans[key(n,p[0])]!=null).length;return`<button class="dot ${c===5?"ok":""}" data-fgo="${n}" aria-current="${n===fi}" aria-label="Finding ${n+1}">${n+1}</button>`}).join("")}<button class="dot ${["scope","appr","root","obs","good","opin","sum"].every(f=>S[f]!=null)?"ok":""}" data-act="towrap" aria-current="false" aria-label="Scope, root cause and summary">5</button><span style="flex:1"></span><span class="small muted">4 findings, then scope and summary</span></div>
+  <div class="grid"><div class="left">
+   <article class="case"><div class="casehead"><div><div class="eyebrow">Finding ${fi+1} of ${FINDINGS.length} · ${esc(F.who)}</div><h1>${esc(F.title)}</h1></div></div>
+    <section class="sec"><h2>Your fieldwork notes</h2><p style="margin:0">${esc(F.facts)}</p><p class="small muted" style="margin:6px 0 0">Evidence: <span class="m">${esc(F.wp)}</span></p></section>
+    ${PARTS.map(p=>partHTML(fi,p)).join("")}
+   </article>
+   <div class="tray"><div class="trayrow"><button class="btn" data-act="fprev" ${fi===0?"disabled":""}>Previous finding</button><button class="btn primary" data-act="fnext" ${all?"":"disabled"}>${fi===FINDINGS.length-1?"Root cause and summary":"Next finding"}</button></div>${all?"":`<p class="small muted" style="margin:0">Choose all five parts to continue.</p>`}</div>
+  </div><aside class="rules" aria-label="Draft report"><div class="rbody" style="max-height:none">${draftHTML(fi)}</div></aside></div>`;
+}
+function choiceBlock(obj,field){
+  const a=S[field],lock=S.mode==="training"&&a!=null;
+  const opts=MIX(obj.opts).map(([o,n])=>{let st="";if(a===n){st=S.mode==="training"?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"background:var(--accent-soft);border-color:var(--accent)"}
+    return`<button class="btn opt" style="${st}" data-wpick="${field}|${n}" ${lock?"disabled":""} aria-pressed="${a===n}">${esc(o[0])}</button>`}).join("");
+  const fb=S.mode==="training"&&a!=null?`<p class="small" style="margin:0;color:${obj.opts[a][1]?"var(--green)":"var(--red)"}"><b>${obj.opts[a][1]?"Good choice.":"Not the best."}</b> ${esc(obj.opts[a][2])}</p>`:"";
+  return`<fieldset class="part"><legend><b>${esc(obj.q)}</b></legend><div class="opts">${opts}</div>${fb}</fieldset>`;
+}
+function wrap(){
+  const ok=["scope","appr","root","obs","good","opin","sum"].every(f=>S[f]!=null),allF=FINDINGS.every((F,fi)=>PARTS.every(p=>S.ans[key(fi,p[0])]!=null));
+  $("app").innerHTML=`<div class="sheet" style="max-width:860px"><div class="eyebrow">Final step</div><h1>Scope, approach and summary</h1><p class="small muted" style="margin:0">Seven choices on this page. Take them in order.</p>
+   <p>First, say what you tested and how. These are the tests you ran in the access review:</p>
+   <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:4px">${TESTS.map(t=>`<li>${esc(t)}</li>`).join("")}</ol>
+   ${choiceBlock(SCOPE,"scope")}${choiceBlock(APPROACH,"appr")}
+   <h2 style="margin:8px 0 0;font-size:18px">The big picture</h2>
+   <p>Now look across all your findings. The leaver, the mover and the joiner issues have something in common, and the quarterly review didn't catch them.</p>
+   ${choiceBlock(ROOT,"root")}
+   <p>One more thing: the policy gap you noted for Fiona Kerr, the consultant.</p>
+   ${choiceBlock(OBS,"obs")}${choiceBlock(GOOD,"good")}${choiceBlock(OPINION,"opin")}
+   <p>Finally, the executive summary. Write it last, once you know what the report adds up to.</p>${choiceBlock(SUMMARY,"sum")}
+   <div class="row" style="justify-content:space-between"><button class="btn" data-act="backf">Back to the findings</button><button class="btn primary" data-act="submit" ${ok&&allF?"":"disabled"}>Send draft to Aoife</button></div>
+   ${ok&&!allF?`<p class="small muted" style="margin:0">Finish all four findings first.</p>`:""}</div>`;
+}
+function reportText(){
+  const L=["LedgerPoint user access review, Q3 2026","Northbay Payments · Draft report","Prepared by: Junior GRC Analyst","","OVERALL OPINION",S.opin!=null?OPINION.opts[S.opin][0]:"","","EXECUTIVE SUMMARY",S.sum!=null?SUMMARY.opts[S.sum][0]:"","","SCOPE",S.scope!=null?SCOPE.opts[S.scope][0]:"","","APPROACH",S.appr!=null?APPROACH.opts[S.appr][0]:"","","TESTS PERFORMED",...TESTS.map((t,n)=>`${n+1}. ${t}`),"","ROOT CAUSE",S.root!=null?ROOT.opts[S.root][0]:"",""];
+  FINDINGS.forEach((F,fi)=>{L.push(`FINDING ${fi+1}: ${F.title} (${F.sev})`);PARTS.forEach(p=>{const a=S.ans[key(fi,p[0])];L.push(`${p[1]}: ${a!=null?F[p[0]][a][0]:""}`)});L.push(`Evidence: ${F.wp}`,"")});
+  L.push("OTHER MATTERS",S.obs!=null?OBS.opts[S.obs][0]:"","","GOOD PRACTICE",S.good!=null?GOOD.opts[S.good][0]:"","",...evidText());
+  return L.join("\n");
+}
+function debrief(){
+  let right=0,tot=0;const traps={},byPart={};
+  FINDINGS.forEach((F,fi)=>PARTS.forEach(p=>{const a=S.ans[key(fi,p[0])];tot++;const o=F[p[0]][a];if(o&&o[1])right++;else if(o){traps[o[3]]=(traps[o[3]]||0)+1;byPart[p[1]]=(byPart[p[1]]||0)+1}}));
+  [[SCOPE,"scope"],[APPROACH,"appr"],[ROOT,"root"],[OBS,"obs"],[GOOD,"good"],[OPINION,"opin"],[SUMMARY,"sum"]].forEach(([obj,f])=>{tot++;const o=obj.opts[S[f]];if(o&&o[1])right++;else if(o)traps[o[3]]=(traps[o[3]]||0)+1});
+  const pct=Math.round(right/tot*100);
+  const open=pct>=85?"This is a strong draft. I'd be happy to send it to Sinéad with very few changes.":pct>=65?"Good draft. A few parts need tightening before it goes out.":pct>=40?"There's a decent report in here, but it needs another pass before anyone outside the team sees it.":"Thanks for this. Let's go through it together before it goes anywhere.";
+  const rootLine=S.root!=null&&ROOT.opts[S.root][1]?"You spotted the common root cause, which is what the audit committee will care about most.":"Have another look at the root cause. Several findings come from the same gap in the joiner, mover and leaver process.";
+  const top=Object.entries(traps).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const weakPart=Object.entries(byPart).sort((a,b)=>b[1]-a[1])[0];
+  const good=[];if(!traps.blame)good.push("Kept it factual: no blame or accusations");if(!traps.vague)good.push("Specific throughout, with no vague wording");if(!traps.restate)good.push("Kept cause and condition separate");if(!traps.scope&&S.scope!=null&&SCOPE.opts[S.scope][1])good.push("Set out exactly what you tested and how");if(S.sum!=null&&SUMMARY.opts[S.sum][1])good.push("Picked a clear, balanced executive summary");
+  const model=(fi,p)=>{const F=FINDINGS[fi],a=S.ans[key(fi,p[0])],o=F[p[0]][a];return o&&!o[1]?`<div class="small" style="color:var(--amber)">Aoife's version: ${esc(F[p[0]].find(x=>x[1])[0])}</div>`:""};
+  $("app").innerHTML=`<div class="sheet" style="max-width:880px">
+   <div class="who">${AOIFE_FACE()}<div><b>Aoife's review of your draft</b><div class="small muted">Stage 2: Write the report</div></div></div>
+   <p>${open} ${rootLine}</p><p>You chose the best wording for <b>${right} of ${tot}</b> parts.${weakPart?` Most of your misses were in the <b>${weakPart[0].toLowerCase()}</b>.`:""}</p>
+   ${top.length?`<div class="res"><h3>What to work on</h3><ol class="db-list">${top.map(([t,n])=>`<li><b>${TRAPS[t]}</b><span class="small muted">${TRAPHELP[t]} (${n} time${n>1?"s":""})</span></li>`).join("")}</ol></div>`:""}
+   ${good.length?`<div class="res"><h3>What you did well</h3><ul class="db-good">${good.slice(0,3).map(g=>`<li>${g}</li>`).join("")}</ul></div>`:""}
+   <div class="res"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px"><h3>Your draft report</h3><button class="btn" data-act="copy">Copy report</button></div>
+    <p class="small muted" style="margin:0">Where Aoife would word it differently, her version is shown underneath yours.</p>
+    <div class="draft"><div class="eyebrow">Overall opinion</div><p style="margin:0"><b>${S.opin!=null?esc(OPINION.opts[S.opin][0]):""}</b></p>${S.opin!=null&&!OPINION.opts[S.opin][1]?`<div class="small" style="color:var(--amber)">Aoife's version: ${esc(OPINION.opts.find(x=>x[1])[0])}</div>`:""}
+     <div class="eyebrow" style="margin-top:10px">Executive summary</div><p style="margin:0">${S.sum!=null?esc(SUMMARY.opts[S.sum][0]):""}</p>${S.sum!=null&&!SUMMARY.opts[S.sum][1]?`<div class="small" style="color:var(--amber)">Aoife's version: ${esc(SUMMARY.opts.find(x=>x[1])[0])}</div>`:""}
+     ${[[SCOPE,"scope","Scope"],[APPROACH,"appr","Approach"]].map(([o,f,l])=>`<div class="eyebrow" style="margin-top:10px">${l}</div><p style="margin:0">${S[f]!=null?esc(o.opts[S[f]][0]):""}</p>${S[f]!=null&&!o.opts[S[f]][1]?`<div class="small" style="color:var(--amber)">Aoife's version: ${esc(o.opts.find(x=>x[1])[0])}</div>`:""}`).join("")}
+     <div class="eyebrow" style="margin-top:10px">Tests performed</div><ol class="small" style="margin:0;padding-left:20px">${TESTS.map(t=>`<li>${esc(t)}</li>`).join("")}</ol>
+     <div class="eyebrow" style="margin-top:10px">Root cause</div><p style="margin:0">${S.root!=null?esc(ROOT.opts[S.root][0]):""}</p></div>
+    ${FINDINGS.map((F,fi)=>`<div class="draft"><h3>Finding ${fi+1}: ${esc(F.title)} <span class="sev sev-${F.sev}">${F.sev}</span></h3>${PARTS.map(p=>{const a=S.ans[key(fi,p[0])];return`<div class="dpart"><b>${p[1]}</b><span>${a!=null?esc(F[p[0]][a][0]):""}</span>${model(fi,p)}</div>`}).join("")}<div class="dpart"><b>Evidence</b><span class="small m">${esc(F.wp)}</span></div></div>`).join("")}
+    <div class="draft"><h3>Good practice</h3><p style="margin:0">${S.good!=null?esc(GOOD.opts[S.good][0]):""}</p>${S.good!=null&&!GOOD.opts[S.good][1]?`<div class="small" style="color:var(--amber)">Aoife's version: ${esc(GOOD.opts.find(x=>x[1])[0])}</div>`:""}</div>
+    <div class="draft"><h3>Other matters <span class="sev sev-Observation">Observation</span></h3><p style="margin:0">${S.obs!=null?esc(OBS.opts[S.obs][0]):""}</p>${S.obs!=null&&!OBS.opts[S.obs][1]?`<div class="small" style="color:var(--amber)">Aoife's version: ${esc(OBS.opts.find(x=>x[1])[0])}</div>`:""}</div>
+    ${evidHTML()}
+   </div>
+   <div class="res"><h3>What's next</h3><p style="margin:0">Next is <a href='job01-stage3.html' target='_blank' rel='noopener'><b>Stage 3: Draft report review</b></a>: send your draft out and handle the comments that come back.</p>
+    <div class="row" style="justify-content:flex-start"><button class="btn primary" data-act="restart">Play again</button><button class="btn" data-act="backf">Back to the findings</button></div></div></div>`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act],[data-ans],[data-bgo],[data-pick],[data-wpick],[data-fgo],[data-mode]");if(!t)return;const d=t.dataset;
+  if(d.mode){S.mode=d.mode;save();renderStats();return}
+  if(d.ans!=null){S.bAns[S.b]=+d.ans;render();return}
+  if(d.bgo!=null){S.b=+d.bgo;render();return}
+  if(d.fgo!=null){S.f=+d.fgo;S.stage="finding";render();window.scrollTo({top:0});return}
+  if(d.pick){const[fi,p,n]=d.pick.split("|");if(S.mode==="training"&&S.ans[key(+fi,p)]!=null)return;S.ans[key(+fi,p)]=+n;render();return}
+  if(d.wpick){const[f,n]=d.wpick.split("|");if(S.mode==="training"&&S[f]!=null)return;S[f]=+n;render();return}
+  const a=d.act;
+  if(a==="beginbrief"){S.stage="brief";S.b=0;render();return}
+  if(a==="bnext"){S.b++;render();window.scrollTo({top:0});return}
+  if(a==="bprev"){S.b--;render();window.scrollTo({top:0});return}
+  if(a==="start"){S.stage="finding";render();window.scrollTo({top:0});return}
+  if(a==="fprev"){S.f--;render();window.scrollTo({top:0});return}
+  if(a==="fnext"){if(S.f<FINDINGS.length-1){S.f++;S.stage="finding"}else S.stage="wrap";render();window.scrollTo({top:0});return}
+  if(a==="towrap"){S.stage="wrap";render();window.scrollTo({top:0});return}
+  if(a==="backf"){S.stage="finding";render();window.scrollTo({top:0});return}
+  if(a==="submit"){S.stage="debrief";render();window.scrollTo({top:0});return}
+  if(a==="replayjob"){S=fresh();S.mode="job";S.stage="finding";render();window.scrollTo({top:0});return}
+  if(a==="copy"){const txt=reportText();const fb=()=>{$("modal").innerHTML=`<div class="scrim" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ch"><h2 id="ch">Your draft report</h2><p class="small muted">Select all the text and copy it.</p><textarea id="ct" style="min-height:280px;font-family:var(--mono);font-size:12px" readonly>${esc(txt)}</textarea><div class="row"><button class="btn" data-act="close">Close</button></div></div></div>`;const ta=$("ct");ta.focus();ta.select()};
+    try{navigator.clipboard.writeText(txt).then(()=>toast("Report copied. Paste it into a document."),fb)}catch(err){fb()}return}
+  if(a==="close"){if(e.target===t||t.tagName==="BUTTON")$("modal").innerHTML="";return}
+  if(a==="restart"){if(t.dataset.sure){S=fresh();try{localStorage.removeItem(KEY)}catch(err){}$("modal").innerHTML="";render();return}
+    t.dataset.sure="1";const old=t.textContent;t.textContent="Click again to restart";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent=old}},3000);return}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("modal").innerHTML)$("modal").innerHTML=""});
+render();
+
+</script>
+<!--GLOSSARY--><script>
+/* ---------- Glossary: click a dotted term to open its explanation ---------- */
+(function(){
+const G=[
+ ["grc","GRC",/\bGRC\b(?! (Manager|Officer|Analyst))/,"Governance, risk and compliance. The work of making sure an organisation is run properly, understands its risks, and follows the laws, standards and rules that apply to it.","Checking who has access to the finance system, assessing a new supplier, or writing a security policy.","It's the umbrella name for the jobs this game prepares you for."],
+ ["framework","Framework",/\bframeworks?\b/i,"An agreed set of good practices, published by a professional body or standards organisation. Organisations use it as a checklist for doing something properly.","ISO 27001 for information security, ISACA's ITAF for IT audit, the IIA Standards for internal audit.","Frameworks tell you what good looks like. Employers expect you to know the main ones by name."],
+ ["itaf","ISACA ITAF",/\b(ISACA )?ITAF\b/,"ISACA's IT Audit Framework: standards and guidance for people who audit IT systems and controls. ISACA also runs the CISA certification.","How to plan an IT audit, gather evidence from systems, and report the results.","It's the main reference for audits like the access reviews in this game."],
+ ["iia","IIA Standards",/\bIIA( Global Internal Audit)? Standards\b/,"The Global Internal Audit Standards, published by the Institute of Internal Auditors. They set out how internal audit work should be planned, done and reported.","Every finding should state the criteria, condition, cause, effect and recommendation.","The most widely recognised standard for internal audit worldwide."],
+ ["audit","Audit",/\baudits?\b/i,"An independent check of whether something is done the way it should be, based on evidence, against agreed rules.","Testing every finance system account against the access control policy.","Audits give management and regulators confidence that controls actually work."],
+ ["portfolio","Portfolio",/\bportfolio\b/i,"A collection of real work you can show an employer, like a report you wrote or an action plan you agreed.","The findings report you copy at the end of each job.","Hard to get without experience. This game gives you one."],
+ ["accessreview","Access review",/\baccess reviews?\b/i,"A regular check that every account in a system is still needed, was properly approved, and has only the access the person's job requires.","Each quarter, the system owner confirms that everyone with access to the finance system should still have it.","One of the most common controls auditors test, and a typical first task for a junior analyst."],
+ ["rolematrix","Role matrix",/\b(privileged )?role matrix\b/i,"A table, approved by the system owner, listing which roles each job is allowed in a system.","AP Clerk: AP_Clerk role only.","It's how you tell whether someone's access fits their job."],
+ ["sod","Segregation of duties",/\bsegregation of duties\b|\bSoD\b/i,"Splitting a sensitive task so no single person can complete it from start to finish without someone else checking.","The person who creates a payment can't also approve it.","It's one of the most important controls against fraud and errors."],
+ ["leastpriv","Least privilege",/\bleast privilege\b/i,"Giving people only the access their job needs, and nothing more.","A clerk who enters invoices doesn't need the right to release payments.","Less access means less damage if an account is misused or stolen."],
+ ["jml","Joiners, movers and leavers",/\bjoiners?, movers? and leavers?\b|\bleavers?\b|\bmovers?\b/i,"People starting, changing job, or leaving. Each event should trigger an access change: new access for joiners, removal of old access for movers, removal of all access for leavers.","Someone leaves on Friday, so their access must be disabled on or before Friday.","Leaver and mover access left behind is one of the most common audit findings."],
+ ["dormant","Dormant account",/\bdormant\b/i,"An account nobody has used for a long time.","No login for 200 days.","Nobody is watching it, so misuse could go unnoticed."],
+ ["shared","Shared account",/\bshared (or generic )?accounts?\b|\bgeneric accounts?\b/i,"One login used by several people.","A \"Finance Temp\" account used by whoever is covering at month-end.","The system can't tell who actually did what, so actions are hard to trace."],
+ ["policy","Policy",/\bpolic(y|ies)\b/i,"An organisation's written, approved rules for how something must be done. Everyone has to follow it.","The Access Control Policy says leavers' access is removed on or before their last day.","In an audit, the policy is what you measure against."],
+ ["policygap","Policy gap",/\bpolicy gaps?\b|\bgaps? in the policy\b/i,"A real risk that no rule in the policy covers. It isn't a breach, because nothing is broken, but the policy should be improved.","Contractor access with no end date, when the policy doesn't require one.","Reported as an observation, with a recommendation to update the policy."],
+ ["finding","Finding",/\bfindings?\b/i,"Something an audit found that breaks an agreed rule, backed by evidence.","A leaver can still log in, which breaks the rule that access must be removed by their last day.","Findings go in the report, and each one gets an owner, an action and a date."],
+ ["severity","Severity",/\bseverity\b/i,"How serious a finding is: Low, Medium, High or Critical.","A leaver using the account after leaving is Critical. An unused read-only account is Low.","It tells the business what to fix first, and sets the deadline."],
+ ["escalate","Escalate",/\bescalat(e|ed|es|ing|ion|ions)\b/i,"Telling your manager straight away, instead of waiting for the report.","A former employee logged in last week. Tell your manager now.","Only for things that could be causing harm right now."],
+ ["exception","Exception",/\bexceptions?( register)?\b/i,"Formal, written approval to break a rule for a good reason, usually signed by a senior person such as the CISO and recorded in an exceptions register.","Approval for someone to hold two conflicting roles while covering a vacancy, with extra checks.","Without a recorded exception, \"it's always been allowed\" is still a breach."],
+ ["tor","Terms of reference",/\bterms of reference\b/i,"The agreed plan for an audit: objective, scope, criteria, evidence needed, timeline and who's involved.","Agreed with the system owner before testing starts.","It prevents arguments later about what was covered."],
+ ["scope","Scope",/\bscope\b/i,"What an audit covers and what it doesn't: the system, the time period, and anything left out.","LedgerPoint user access, July to September 2026. Service accounts out of scope.","Readers assume anything not mentioned was checked, so scope must be clear."],
+ ["scopelim","Scope limitation",/\bscope limitations?\b/i,"Something the audit should have covered but couldn't, or was asked to leave out.","Login records were only kept for 30 days, so you couldn't check who used their account earlier in the quarter.","It must be stated in the report so nobody assumes that area was checked."],
+ ["criteria","Criteria",/\bcriteria\b/i,"The rules you test against: policies, standards, matrices or laws.","Access Control Policy v3.2 and the role matrix.","No criteria, no finding. Without a rule, it's just an opinion."],
+ ["rootcause","Root cause",/\broot causes?\b/i,"The underlying reason a problem happened, as opposed to the problem itself.","Leavers keep their access because HR's leaver notices don't reach IT.","Fixing the root cause stops the same finding coming back."],
+ ["execsum","Executive summary",/\bexecutive summar(y|ies)\b/i,"A short paragraph at the top of a report for senior readers: what was reviewed, the headline result, the most serious issue and what to do.","The audit committee may read nothing else.","Write it last, in plain language."],
+ ["opinion","Overall opinion",/\boverall opinion\b/i,"A one-line rating of the whole audit, such as Satisfactory, Needs improvement or Unsatisfactory.","Unsatisfactory: one Critical and four High findings.","It's the first thing senior readers look at."],
+ ["wp","Working papers",/\bworking papers?\b/i,"The evidence and notes behind an audit, each with a reference such as WP2.","WP2: the user export, with a note of how it was checked.","Anyone should be able to check a finding by following its working paper reference."],
+ ["mgmtresp","Management response",/\bmanagement responses?\b/i,"The owner's written reply to a finding, in their own words: Agreed, Partly agreed or Not agreed.","\"Agreed. The weekly leaver check will be in place by 3 December.\"","It shows management accepts the finding and commits to fixing it."],
+ ["findingscall","Findings call",/\bfindings call\b|\bclosing meeting\b/i,"A meeting near the end of an audit where the auditor and the owners agree an action, owner and date for each finding.","Held after the draft report has been reviewed.","Its output, the action plan, is what gets followed up."],
+ ["actionplan","Action plan",/\baction (plan|tracker)s?\b/i,"The list of agreed fixes: what will be done, who owns it, by when, and the evidence that will prove it's done.","Set up a weekly check of leavers. Owner: the IT manager. Due: 3 December. Evidence: four weeks of check records.","Audit tracks it and closes each action only after checking the evidence."],
+ ["draft","Draft report",/\bdraft reports?\b/i,"The first version of an audit report, sent to the owners to check facts before it's finalised.","Sent with a cover email asking for comments by a date.","It avoids surprises and catches factual errors."],
+ ["owner","System owner",/\bsystem owners?\b/i,"The senior person ultimately accountable for a system, including who can use it.","The head of Finance owns the finance system and is ultimately accountable for it. If someone needs access, they decide yes or no. IT then sets it up.","They approve access and the role matrix, and own most audit actions for their system."],
+ ["ciso","CISO",/\bCISO\b/,"Chief Information Security Officer: the senior person responsible for information security.","Owns the security policies and approves exceptions.","Usually the policy owner, and a key reader of audit reports."],
+ ["committee","Audit committee",/\baudit committee\b/i,"A group of board members who oversee audit, risk and controls.","Receives the final report through the GRC Manager.","It's the most senior audience for an audit report."],
+ ["observation","Observation",/\bobservations?\b/i,"Something worth reporting that doesn't break a rule, such as a policy gap or an improvement.","No policy requires contractor access to have an end date.","Reported separately from findings, with no severity rating."],
+ ["entra","Microsoft Entra ID",/\b(Microsoft )?Entra( ID)?\b/,"Microsoft's cloud identity system, previously called Azure AD. It controls who can sign in to Microsoft 365 and Azure, and what they can do.","Every Northbay staff account lives in Entra ID.","Whoever controls Entra ID controls access to email, files and cloud systems."],
+ ["pim","PIM",/\bPIM\b|\bPrivileged Identity Management\b/,"Privileged Identity Management: a Microsoft Entra feature that makes admin roles \"just-in-time\". People activate a role only when they need it, for a limited time, with controls like MFA and approval.","An admin activates Global Administrator for two hours, with a justification.","It reduces standing admin access, a favourite target for attackers."],
+ ["priv","Privileged access",/\bprivileged access\b|\badmin roles?\b/i,"Access with elevated rights compared with a standard user account, such as creating, changing or deleting users, permissions, settings and data.","Sys_Admin in LedgerPoint, or Global Administrator in Microsoft Entra.","In the wrong hands it can do serious damage, so it's given out sparingly and checked first in any access review."],
+ ["ga","Global Administrator",/\bGlobal Administrators?\b|\bGlobal Admins?\b/,"The most powerful role in Microsoft Entra ID. It can do anything in the tenant, including give itself any other access.","Changing security settings for the whole company.","Keep holders to a minimum. Microsoft recommends fewer than five."],
+ ["jit","Just-in-time (eligible and active)",/\bjust-in-time\b|\beligible\b/i,"In PIM, an Eligible assignment means the person can switch the role on when they need it, for a limited time. An Active assignment is always on.","Eligible: activate Helpdesk Administrator for 4 hours to fix a password problem.","Always-on admin access is waiting to be stolen. Eligible is the safe default for people."],
+ ["breakglass","Emergency access (break-glass) account",/\bbreak-glass\b|\bemergency access accounts?\b|\bemergency accounts?\b/i,"A spare admin account kept for emergencies, like an outage that locks normal admins out. It has permanent Global Administrator by design.","Protected by a hardware key, alerting Security on every sign-in, tested every 90 days.","Permanent admin looks wrong but is correct here. Test the controls around it instead."],
+ ["sp","Service principal",/\bservice principals?\b/i,"The identity an app uses to sign in and act in Entra ID, like an account for software.","An HR connector that creates staff accounts automatically.","Apps can hold admin roles too, so they need an owner and a review."],
+ ["ticket","Ticket (access request)",/\b(access request )?tickets?\b|\baccess requests?\b/i,"A record in the IT service desk system asking for something to be done, such as giving someone access. An access request ticket shows who asked, which roles they need, who approved it and when IT set it up.","A request for a new starter to get the role for entering invoices, approved by their manager and the system owner, and set up on their first day.","In an access review, the ticket is your evidence that access was approved. Compare it with what the person actually has: no ticket, or more access than the ticket asked for, is a finding."],
+ ["breach","Data breach",/\bdata breach(es)?\b/i,"Personal or confidential data seen, copied, changed or lost by someone who shouldn't have it.","A former employee's account is used to export a list of staff salaries and bank details.","Data protection laws require breaches to be reported. In the EU, under the General Data Protection Regulation (GDPR), a personal data breach usually has to be reported to the regulator within 72 hours, and affected people may need to be told. Most countries have similar laws. Fines and loss of trust can follow."],
+ ["svcacct","Service account",/\bservice accounts?\b/i,"An account used by an application or automated process, not by a person.","svc_bankfeed, which loads bank statements into the finance system every night.","Service accounts are often powerful and rarely watched, and their passwords seldom change. Each one needs a named owner and a regular review."],
+ ["ca","Conditional Access",/\bConditional Access\b/,"Entra rules that decide when sign-in is allowed, such as requiring MFA or blocking unknown countries.","Admins must use MFA from a company device.","Emergency accounts are excluded so they still work if a rule goes wrong."],
+ ["mfa","MFA",/\bMFA\b/,"Multi-factor authentication: proving it's you with something more than a password, such as an app prompt or a security key.","A password plus a tap on your phone.","It stops most attacks that use stolen passwords."],
+ ["fido","FIDO2 key",/\bFIDO2\b/,"A physical security key used to sign in. It can't be phished like a password or a text code.","A USB key you touch to sign in.","Recommended for the most powerful accounts."],
+ ["tier0","Tier 0",/\bTier 0\b/,"The most powerful roles, which can take over everything else.","Global Administrator and Privileged Role Administrator.","These get the strictest controls, like approval for every activation."],
+ ["guest","Guest account",/\bguests?( accounts?)?\b/i,"An account in Entra ID for someone outside the company, like a supplier or consultant.","A consultant from Ardmore Advisory signing in with their own email.","Their access should be limited and end with their contract."],
+ ["tenant","Tenant",/\btenant\b/i,"An organisation's own space in Microsoft's cloud, holding its users, settings and data.","Northbay's Microsoft 365 and Azure tenant.","Control of the tenant means control of everything in it."]
+];
+const css=document.createElement("style");
+css.textContent=`.gterm{border-bottom:1.5px dotted var(--accent,#2457a6);cursor:help;text-decoration:none}
+.gterm:hover,.gterm:focus-visible{background:var(--accent-soft,#e8eef8);outline:none;border-radius:3px}
+#gloss{position:fixed;z-index:60;top:0;right:0;height:100%;width:min(380px,100vw);background:var(--panel,#fff);color:var(--ink,#1b2230);border-left:1px solid var(--line,#e1e6ec);box-shadow:-8px 0 24px rgba(0,0,0,.12);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;align-content:start;gap:12px;overflow:auto;transform:translateX(105%);transition:transform .2s ease;visibility:hidden}
+#gloss.open{transform:none;visibility:visible}
+#gloss .gk{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#5d6879)}
+#gloss h2{margin:0;font-size:22px}#gloss p{margin:0;line-height:1.5}
+#gloss .gb{background:var(--accent-soft,#e8eef8);border-radius:8px;padding:10px 12px;display:grid;gap:2px}#gloss .gb b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent,#2457a6)}
+#gloss .gx{justify-self:end;background:none;border:1px solid var(--line,#e1e6ec);border-radius:8px;padding:6px 10px;cursor:pointer;color:inherit;font:inherit;font-size:13px}
+@media (max-width:700px){#gloss{top:auto;bottom:0;height:auto;max-height:75vh;width:100%;border-left:0;border-top:1px solid var(--line,#e1e6ec);border-radius:16px 16px 0 0;transform:translateY(105%)}}
+@media (prefers-reduced-motion:reduce){#gloss{transition:none}}`;
+document.head.appendChild(css);
+const panel=document.createElement("aside");panel.id="gloss";panel.setAttribute("aria-label","Glossary");panel.setAttribute("role","dialog");
+document.body.appendChild(panel);
+const byKey={};G.forEach(g=>byKey[g[0]]=g);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let lastFocus=null;
+function open(k){const g=byKey[k];if(!g)return;lastFocus=document.activeElement;
+  panel.innerHTML=`<button class="gx" data-gclose>Close ✕</button><div class="gk">Glossary</div><h2>${esc(g[1])}</h2><p>${esc(g[3])}</p><div class="gb"><b>Example</b><span>${esc(g[4])}</span></div><div class="gb"><b>Why it matters</b><span>${esc(g[5])}</span></div>`;
+  wrapIn(panel,new Set([k]),true);panel.classList.add("open");panel.querySelector(".gx").focus()}
+function close(){panel.classList.remove("open");if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+document.addEventListener("click",e=>{const t=e.target.closest(".gterm");if(t){e.preventDefault();e.stopPropagation();open(t.dataset.g);return}
+  if(e.target.closest("[data-gclose]")){close();return}
+  if(panel.classList.contains("open")&&!e.target.closest("#gloss"))close()},true);
+document.addEventListener("keydown",e=>{const t=e.target.closest&&e.target.closest(".gterm");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();open(t.dataset.g)}
+  if(e.key==="Escape"&&panel.classList.contains("open")){e.stopPropagation();close()}},true);
+const SKIP="button,a,label,input,textarea,select,option,td,th,code,script,style,.gterm,#gloss,.m,.mono,.role,.dot,.stamp,.modal,.bar,.tag,.kv,.stat,.chips,summary,h1,legend,.eyebrow";
+function wrap(){wrapIn(document.querySelector(".wrap")||document.body,new Set([...document.querySelectorAll(".wrap .gterm,body>.gterm")].map(x=>x.dataset.g)),false)}
+function wrapIn(root,used,inPanel){
+  const skip=inPanel?"button,h2,.gk,.gterm":SKIP;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>!n.nodeValue.trim()||(n.parentElement&&n.parentElement.closest(skip))||(n.parentElement&&n.parentElement.closest("b")&&inPanel)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  for(const node of nodes){
+    let cur=node;
+    while(cur){
+      let best=null;
+      for(const g of G){if(used.has(g[0]))continue;const m=g[2].exec(cur.nodeValue);if(m&&(!best||m.index<best.m.index||(m.index===best.m.index&&m[0].length>best.m[0].length)))best={g,m}}
+      if(!best)break;const g=best.g,m=best.m;
+      const after=cur.splitText(m.index);const rest=after.splitText(m[0].length);
+      const sp=document.createElement("span");sp.className="gterm";sp.dataset.g=g[0];sp.tabIndex=0;sp.setAttribute("role","button");sp.title="What's this?";sp.textContent=after.nodeValue;
+      after.replaceWith(sp);used.add(g[0]);cur=rest;
+    }
+  }
+}
+let timer=null;
+const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>{obs.disconnect();wrap();obs.observe(document.body,{childList:true,subtree:true})},40)});
+wrap();obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script><!--/GLOSSARY-->
+
+</body></html>

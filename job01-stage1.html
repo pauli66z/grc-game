@@ -1,0 +1,795 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LedgerPoint Case Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Red+Hat+Mono:wght@400;500;600&family=Kalam:wght@700&display=swap">
+<style>
+/* Layout: one case file at a time on the desk (left), the policy rulebook beside it (right), stamp tray under the case */
+:root{
+  --desk:#d9dee5; --paper:#fbfaf6; --paper-line:#e6e2d8; --panel:#ffffff; --ink:#1b2230; --muted:#5d6879; --line:#e1e6ec;
+  --bar:#1d2430; --bar-ink:#e7ebf1; --bar-muted:#9aa6b6;
+  --accent:#2457a6; --accent-soft:#e8eef8; --accent-ink:#ffffff;
+  --red:#c2412d; --red-soft:#fdf1ee; --green:#2f7d55; --green-soft:#e6f3ec; --amber:#a2650b; --amber-soft:#fff3dc;
+  --sans:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --mono:"Red Hat Mono",ui-monospace,monospace; --hand:"Kalam","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{background:var(--bar);color:var(--bar-ink);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:600}
+.brand small,.stat small{display:block;font-size:11px;color:var(--bar-muted)}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+.stat b{font-family:var(--mono);font-weight:500}
+.linkbtn{all:unset;cursor:pointer;font-size:12px;color:var(--bar-muted);text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.dot.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.dot.flag{background:var(--red-soft);color:var(--red);border-color:transparent}
+.dot.gap{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.dot[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink)}
+.dot:focus-visible{outline:2px solid var(--accent)}
+.grid{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.left{flex:999 1 560px;min-width:0;display:grid;gap:14px}
+.rules{flex:1 1 320px;max-width:440px;min-width:0;background:var(--panel);border-radius:12px;overflow:hidden}
+@media (max-width:900px){.rules{max-width:none}}
+/* case file */
+.case{position:relative;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px 14px 14px 14px;padding:20px 22px;display:grid;gap:16px;box-shadow:0 1px 0 var(--paper-line),0 8px 24px #0000000f}
+.case::before{content:"CASE FILE";position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--paper);border:1px solid var(--paper-line);border-bottom:0;border-radius:8px 8px 0 0;padding:3px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.casehead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.casehead h1{font-size:22px;margin:0;font-weight:600;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec{display:grid;gap:8px;border-top:1px dashed var(--paper-line);padding-top:12px}
+.sec h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}
+.kv div{display:grid;gap:1px;min-width:0}
+.kv span{font-size:11px;color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:500;font-size:13px;overflow-wrap:anywhere}
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.role{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.none{font-size:13px;color:var(--muted);font-style:italic}
+.stamp{position:absolute;right:22px;top:22px;font-family:var(--hand);font-size:30px;padding:2px 14px;border:3px solid currentColor;border-radius:8px;transform:rotate(-8deg);pointer-events:none;background:var(--paper)}
+.stamp.ok{color:var(--green)}.stamp.flag{color:var(--red)}.stamp.gap{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thud .25s ease-out}@keyframes thud{from{transform:rotate(-8deg) scale(1.6);opacity:0}}}
+/* tray */
+.tray{background:var(--panel);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.trayrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.big{cursor:pointer;font-family:var(--hand);font-size:22px;padding:8px 22px;border-radius:10px;border:3px solid currentColor;background:transparent}
+.big.ok{color:var(--green)}.big.flag{color:var(--red)}.big.gap{color:var(--amber)}
+.big:hover{background:var(--panel)}
+.btn{cursor:pointer;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.esc{border-color:var(--red);color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:6px}
+legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;background:var(--panel)}
+.chips label:has(input:checked){border-color:var(--red);background:var(--red-soft)}
+.chips input{accent-color:var(--red)}
+.chips.mono label{font-family:var(--mono)}
+.err{color:var(--red);font-size:13px;margin:0}
+/* rulebook */
+.rtabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+.rtab{all:unset;cursor:pointer;flex:1;text-align:center;padding:11px 6px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+.rtab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+.rtab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rbody{padding:14px 16px;display:grid;gap:2px;max-height:72vh;overflow:auto}
+.clause{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.clause b{font-family:var(--mono);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.m{font-family:var(--mono);white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);padding-top:8px}
+/* overlays */
+.scrim{position:fixed;inset:0;background:#0b0f1599;display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--panel);color:var(--ink);border-radius:12px;width:min(540px,100%);max-height:calc(100% - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.modal h2{margin:0;font-size:18px}
+.modal p{margin:0}
+.who{display:flex;gap:10px;align-items:center}
+.av{flex:0 0 34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+/* intro & debrief */
+.sheet{background:var(--paper);border:1px solid var(--paper-line);border-radius:14px;padding:24px;display:grid;gap:14px;max-width:760px}
+.sheet h1{margin:0;font-size:26px;text-wrap:balance}
+.sheet p{margin:0;max-width:65ch}
+.sheet ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.score{display:flex;flex-wrap:wrap;gap:10px}
+.score div{flex:1 1 130px;border:1px solid var(--paper-line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.score b{display:block;font-family:var(--mono);font-size:22px}
+.res{display:grid;gap:8px}
+.res h3{margin:6px 0 0;font-size:15px}
+.item{border-left:3px solid var(--line);padding:5px 0 5px 12px;display:grid;gap:2px}
+.item.hit{border-left-color:var(--green)}.item.part{border-left-color:var(--amber)}.item.miss{border-left-color:var(--red)}
+.tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.hit .tag{color:var(--green)}.part .tag{color:var(--amber)}.miss .tag{color:var(--red)}
+.small{font-size:12.5px}.muted{color:var(--muted)}
+.bigstamp{font-family:var(--hand);font-size:30px;color:var(--red);display:inline-block;border:3px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-4deg)}
+.av-aoife{background:#d7eeec;overflow:hidden;padding:0}.av-aoife svg{width:100%;height:100%;display:block}
+.who .av-aoife{flex-basis:44px;height:44px}
+.aoife-note{display:flex;gap:10px;align-items:flex-start;background:var(--amber-soft);border-radius:10px;padding:10px 12px}
+.aoife-note .av{flex:0 0 38px;height:38px}.aoife-note>div{display:grid;gap:2px;min-width:0}
+.aoife-note .tag{color:var(--amber)}
+.intro-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.intro-top>div{flex:1 1 280px;display:grid;gap:10px}
+.aoife-full{width:150px;height:auto;flex:0 0 auto}
+@media (max-width:520px){.aoife-full{width:110px}}
+.db-msg{display:grid;gap:8px;font-size:15.5px}.db-msg p{margin:0}
+.db-list{margin:0;padding-left:22px;display:grid;gap:14px}.db-list li{display:grid;gap:4px}
+.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.db-report{min-width:640px}.db-report th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line)}
+.db-more{border:1px solid var(--line);border-radius:10px;padding:10px 14px}.db-more summary{cursor:pointer;font-weight:600}.db-more[open] summary{margin-bottom:10px}
+.jobs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:16px}.jobs h3{margin:0 0 4px;font-size:15px}
+.job{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.job>div{display:grid;gap:2px;min-width:0}.job-n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.job-s{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.job.open .job-s{background:var(--green-soft);color:var(--green)}.job.locked{opacity:.75}.job.locked .job-s{background:var(--line);color:var(--muted)}
+@media (max-width:520px){.job{grid-template-columns:1fr}}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--bar);color:var(--bar-ink);padding:10px 14px;border-radius:10px;max-width:340px;font-size:13px}
+</style>
+
+<header class="bar">
+  <div class="brand"><div class="logo">N</div><div><b>Northbay Payments</b><small>LedgerPoint Q3 access review · Job 01 · Stage 1</small></div><a href="index.html" style="margin-left:8px;font-size:12px;color:var(--bar-muted);white-space:nowrap">← Game home</a></div>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const MIX=a=>{let h=7;const s=a.map(o=>o[0]).join("|");for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;const p=a.map((o,n)=>[o,n]);for(let i=p.length-1;i>0;i--){h=(Math.imul(h,1103515245)+12345)|0;const j=(h>>>8)%(i+1);[p[i],p[j]]=[p[j],p[i]]}return p};
+
+/* ---------- Data ---------- */
+const U={
+ cmurray:["Ciara Murray","E1081","Finance","AP Clerk","AP_Clerk","Named","Active","2022-01-10","2026-10-09",""],
+ afitzgerald:["Aaron Fitzgerald","E1156","Finance","AP Clerk","AP_Clerk","Named","Active","2026-08-17","2026-10-09",""],
+ omurphy:["Orla Murphy","E1095","Finance","AR Accountant","AR_Clerk;Report_Viewer","Named","Suspended","2022-08-29","2026-05-01",""],
+ cbyrne:["Ciarán Byrne","E1042","Finance","AP Supervisor","AP_Approver;Supplier_Maintain","Named","Active","2020-06-01","2026-10-02",""],
+ swalsh:["Sinéad Walsh","E1003","Finance","Financial Controller","AP_Approver;GL_Approver;Report_Viewer","Named","Active","2019-03-04","2026-10-09",""],
+ mdoherty:["Mark Doherty","E1077","Finance","Senior AP Clerk","AP_Clerk;AP_Approver","Named","Active","2021-09-20","2026-10-08",""],
+ pgill:["Paul Gill","E1033","Finance","Payroll Manager","Payroll_Processor;Report_Viewer","Named","Disabled","2019-10-07","2026-09-30","2026-09-30"],
+ lquinn:["Lisa Quinn","E1089","Marketing","Marketing Executive","AP_Clerk;Supplier_Maintain","Named","Active","2022-04-11","2026-09-22",""],
+ hdaly:["Hannah Daly","E1160","Finance","Management Accountant","GL_Journal;Report_Viewer","Named","Active","2026-09-14","2026-10-07",""],
+ rkelly:["Ronan Kelly","E1064","Operations","Operations Analyst","Report_Viewer","Named","Active","2021-01-18","2026-03-12",""],
+ ecoyle:["Emma Coyle","E1158","Finance","AP Clerk","AP_Clerk;AP_Approver","Named","Active","2026-09-07","2026-10-08",""],
+ egallagher:["Eoin Gallagher","E1110","Finance","Payroll Officer","Payroll_Processor","Named","Active","2023-06-05","2026-10-09",""],
+ dmoran:["Declan Moran","E1021","IT","IT Systems Administrator","Sys_Admin","Named","Active","2019-05-13","2026-10-09",""],
+ "fin.temp01":["Finance Temp","","Finance","","AP_Clerk","Generic","Active","2026-09-01","2026-09-30",""],
+ treilly:["Tomás Reilly","C2011","External","Contract Auditor (Byrne & Co.)","Report_Viewer","Named","Active","2026-09-21","2026-10-06","","2026-12-31"],
+ fkerr:["Fiona Kerr","C1987","External","IT Consultant (Ardmore Advisory)","Report_Viewer","Named","Active","2026-03-02","2026-10-08","","Not set"],
+ bnolan:["Brian Nolan","E1050","Finance","Head of Treasury","Payment_Release;Report_Viewer","Named","Active","2020-10-05","2026-10-09",""]
+};
+const ORDER=Object.keys(U);
+const HR={
+ E1095:["Leave of absence","2026-05-05","Finance, AR Accountant","","Maternity leave; expected return 2027-02-05"],
+ E1089:["Mover","2026-08-04","Finance, AP Clerk","Marketing, Marketing Executive","Internal transfer"],
+ E1156:["Joiner","2026-08-17","","Finance, AP Clerk",""],
+ E1042:["Leaver","2026-08-28","Finance, AP Supervisor","","Resigned"],
+ E1110:["Mover","2026-09-01","Finance, AP Clerk","Finance, Payroll Officer",""],
+ E1158:["Joiner","2026-09-07","","Finance, AP Clerk",""],
+ E1160:["Joiner","2026-09-14","","Finance, Management Accountant",""],
+ C2011:["Contractor start","2026-09-21","","External, Contract Auditor","Contract ends 2026-12-31"],
+ E1033:["Leaver","2026-09-30","Finance, Payroll Manager","","Retired"]
+};
+const TICKETS={
+ cmurray:[["RITM0024410","2021-12-20","AP_Clerk","Ciarán Byrne, 21 Dec 2021","Sinéad Walsh, 22 Dec 2021","2022-01-10"]],
+ afitzgerald:[],
+ omurphy:[["RITM0026873","2022-08-15","AR_Clerk; Report_Viewer","Sinéad Walsh, 16 Aug 2022","Sinéad Walsh, 16 Aug 2022","2022-08-29"]],
+ cbyrne:[["RITM0013521","2020-05-18","AP_Approver; Supplier_Maintain","Sinéad Walsh, 19 May 2020","Sinéad Walsh, 19 May 2020","2020-06-01"]],
+ swalsh:[["RITM0009874","2019-02-18","AP_Approver; GL_Approver; Report_Viewer","Méabh Lynch, 19 Feb 2019","Méabh Lynch (system owner at the time), 19 Feb 2019","2019-03-04"]],
+ mdoherty:[["RITM0019230","2021-09-06","AP_Clerk","Ciarán Byrne, 07 Sep 2021","Sinéad Walsh, 08 Sep 2021","2021-09-20"],["RITM0030115","2023-02-13","AP_Approver (cover for AP Supervisor absences)","Ciarán Byrne, 14 Feb 2023","Sinéad Walsh, 14 Feb 2023","2023-02-15"]],
+ pgill:[["RITM0011306","2019-09-23","Payroll_Processor; Report_Viewer","Sinéad Walsh, 24 Sep 2019","Sinéad Walsh, 24 Sep 2019","2019-10-07"]],
+ lquinn:[["RITM0025102","2022-03-28","AP_Clerk","Ciarán Byrne, 29 Mar 2022","Sinéad Walsh, 30 Mar 2022","2022-04-11"],["RITM0034981","2024-03-04","Supplier_Maintain (temporary, supplier clean-up project)","Ciarán Byrne, 05 Mar 2024","Sinéad Walsh, 05 Mar 2024","2024-03-06"]],
+ hdaly:[["RITM0041302","2026-09-08","GL_Journal; Report_Viewer","Aisling McCarthy, 08 Sep","Sinéad Walsh, 09 Sep","2026-09-14"]],
+ rkelly:[["RITM0016644","2021-01-06","Report_Viewer","Operations Manager, 07 Jan 2021","Sinéad Walsh, 08 Jan 2021","2021-01-18"]],
+ ecoyle:[["RITM0041217","2026-09-02","AP_Clerk","Mark Doherty, 03 Sep","Sinéad Walsh, 04 Sep","2026-09-07"]],
+ egallagher:[["RITM0031877","2023-05-22","AP_Clerk","Ciarán Byrne, 23 May 2023","Sinéad Walsh, 24 May 2023","2023-06-05"],["RITM0041190","2026-08-26","Payroll_Processor (role change). Remove AP_Clerk.","Paul Gill, 27 Aug","Sinéad Walsh, 28 Aug","2026-09-01"]],
+ dmoran:[["RITM0012088","2019-04-29","Sys_Admin","Conor Flynn, Head of IT, 30 Apr 2019","Sinéad Walsh, 01 May 2019","2019-05-13"]],
+ "fin.temp01":[],
+ treilly:[["RITM0041355","2026-09-15","Report_Viewer (until 2026-12-31)","Méabh Lynch, 16 Sep","Sinéad Walsh, 17 Sep","2026-09-21"]],
+ fkerr:[["RITM0038702","2026-02-16","Report_Viewer","Conor Flynn, Head of IT, 17 Feb","Sinéad Walsh, 18 Feb","2026-03-02"]],
+ bnolan:[["RITM0014937","2020-09-21","Payment_Release; Report_Viewer","Méabh Lynch, 22 Sep 2020","Sinéad Walsh, 23 Sep 2020","2020-10-05"]]
+};
+const ISSUES={leaver_active:"Leaver still has access",not_in_matrix:"Role not allowed for their job",late_removal:"Leaver removed late",mover:"Mover kept old access",sod:"Segregation of duties conflict",dormant:"Dormant account",generic:"Shared or generic account",no_request:"No approved access request",excess:"More access than was approved"};
+const CLAUSES={"4.1":"Approval","4.2":"Least privilege","4.3":"Leavers","4.4":"Movers","4.5":"Dormant","4.6":"Shared accounts","4.7":"SoD","4.8":"Privileged access"};
+const SEVS=["Low","Medium","High","Critical"];
+const SEVHELP={Low:"Housekeeping. Can't change anything, and isn't being used.",Medium:"A real control gap, but less direct harm.",High:"Could directly lead to fraud or a serious breach.",Critical:"Harm may be happening right now."};
+const PTS={Critical:30,High:20,Medium:10,Low:5};
+const TRUTH={
+ cbyrne:{title:"Leaver still active, and used the account after leaving",ok:["leaver_active"],cl:["4.3"],sev:"Critical",why:"Left on 28 Aug, still Active on 9 Oct, and logged in on 2 Oct, five weeks after leaving. With Supplier_Maintain he could change supplier bank details. This needed escalating, not just reporting."},
+ mdoherty:{title:"Segregation of duties conflict",ok:["sod","not_in_matrix"],cl:["4.7","4.2"],sev:"High",why:"AP_Clerk plus AP_Approver lets Mark create and approve his own payments. The cover arrangement was never recorded as a CISO exception."},
+ ecoyle:{title:"More access than was approved",ok:["excess","sod","not_in_matrix"],cl:["4.1","4.7","4.2"],sev:"High",why:"Her ticket approved AP_Clerk only, but she was given AP_Approver too, which also creates an SoD conflict."},
+ "fin.temp01":{title:"Shared generic account",ok:["generic","no_request"],cl:["4.6","4.1"],sev:"High",why:"A shared account that can create payments, with no owner and no approved request. Because several people can log in as fin.temp01, the system only records \"fin.temp01 created this payment\", not who actually did it. If a wrong or fraudulent payment went through, it would be difficult to trace the person responsible. Best practice is one named account per person."},
+ lquinn:{title:"Mover kept old finance access",ok:["mover","sod","not_in_matrix"],cl:["4.4","4.7","4.2"],sev:"High",why:"Moved to Marketing on 4 Aug but still holds AP_Clerk and Supplier_Maintain (a conflicting pair), and logged in on 22 Sep."},
+ afitzgerald:{title:"Joiner with no access request",ok:["no_request"],cl:["4.1"],sev:"Medium",why:"Joined 17 Aug with AP_Clerk, but there's no ticket approving it."},
+ rkelly:{title:"Dormant account",ok:["dormant"],cl:["4.5"],sev:"Low",why:"Last login 12 Mar, 211 days before the export, and still Active. It's Low because the account is read-only and unused. But it can still see finance reports, so it should be disabled."}
+};
+const FINE={
+ cmurray:"Long-standing AP Clerk with one role and recent logins. Nothing wrong.",
+ omurphy:"Orla is on maternity leave and her account is Suspended, exactly as 4.5 requires.",
+ swalsh:"Two approver roles aren't a conflict in the SoD matrix.",
+ pgill:"Retired 30 Sep and disabled the same day.",
+ hdaly:"Her ticket matches the access she was given.",
+ egallagher:"His old AP access was removed. He only has Payroll_Processor now.",
+ treilly:"Read-only, fully approved, with a contract end date.",
+ fkerr:"No rule is broken: she's a current consultant with read-only access, approved before this quarter. But it's a policy gap. Her access has no end date, and contractors aren't on HR's leavers list, so nothing will remove her access when her contract ends. Read-only still matters: after she leaves, she could keep reading Northbay's financial reports.",
+ bnolan:"Head of Treasury with Payment_Release alone. No conflict.",
+ dmoran:"Sys_Admin is privileged access, so it's always worth checking first. Here it's given out correctly: 4.8 permits it for his job as IT Systems Administrator, and he holds no business roles, so there's no SoD conflict."
+};
+
+const AOIFE_ART=`<circle cx="200" cy="250" r="185" fill="#d7eeec"/><ellipse cx="200" cy="448" rx="95" ry="12" fill="#1b2a4a" opacity=".15"/><path d="M300 152 L292 176 L314 160 Z" fill="#fff"/><circle cx="322" cy="126" r="34" fill="#fff"/><path d="M306 127 L318 139 L340 112" fill="none" stroke="#2fa37a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><rect x="163" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><rect x="205" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><ellipse cx="174" cy="440" rx="22" ry="10" fill="#7a2e1d"/><ellipse cx="228" cy="440" rx="22" ry="10" fill="#7a2e1d"/><rect x="189" y="182" width="22" height="34" rx="8" fill="#e9b28f"/><path d="M148 228 Q200 204 252 228 L264 338 Q200 352 136 338 Z" fill="#2457a6"/><path d="M184 212 L200 262 L216 212 Z" fill="#fff"/><path d="M184 212 L200 262 L176 244 L170 220 Z" fill="#1c4585"/><path d="M216 212 L200 262 L224 244 L230 220 Z" fill="#1c4585"/><path d="M190 214 L200 268 L210 214" fill="none" stroke="#25b3a8" stroke-width="4"/><rect x="188" y="266" width="24" height="30" rx="3" fill="#fff"/><rect x="188" y="266" width="24" height="8" rx="2" fill="#25b3a8"/><rect x="193" y="280" width="14" height="3" rx="1.5" fill="#1b2a4a"/><rect x="193" y="286" width="10" height="3" rx="1.5" fill="#1b2a4a"/><path d="M248 236 L282 280 L298 222" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><line x1="300" y1="210" x2="312" y2="180" stroke="#1b2a4a" stroke-width="5" stroke-linecap="round"/><circle cx="300" cy="210" r="13" fill="#f6c9a8"/><g transform="rotate(-8 134 300)"><rect x="98" y="252" width="66" height="88" rx="6" fill="#c98a4b"/><rect x="105" y="262" width="52" height="72" rx="3" fill="#fff"/><rect x="118" y="247" width="26" height="12" rx="4" fill="#5c6670"/><path d="M110 276 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="274" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M110 296 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="294" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M111 312 l10 10 M121 312 l-10 10" stroke="#e0533d" stroke-width="3" stroke-linecap="round"/><rect x="128" y="314" width="22" height="4" rx="2" fill="#9aa6b2"/></g><path d="M152 236 L140 296" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round"/><circle cx="142" cy="304" r="13" fill="#f6c9a8"/><rect x="140" y="84" width="120" height="100" rx="40" fill="#a9432a"/><circle cx="200" cy="140" r="54" fill="#f6c9a8"/><circle cx="146" cy="146" r="9" fill="#f6c9a8"/><circle cx="254" cy="146" r="9" fill="#f6c9a8"/><path d="M146 138 Q146 84 200 82 Q256 84 256 136 Q236 106 204 108 Q178 104 162 128 Z" fill="#a9432a"/><circle cx="172" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="228" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="183" cy="145" r="4" fill="#1b2a4a"/><circle cx="217" cy="145" r="4" fill="#1b2a4a"/><circle cx="183" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><circle cx="217" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><line x1="196" y1="145" x2="204" y2="145" stroke="#1b2a4a" stroke-width="3"/><path d="M190 170 Q200 179 210 170" fill="none" stroke="#1b2a4a" stroke-width="3" stroke-linecap="round"/>`;
+const aoifeArt=(vb,cls)=>`<svg class="${cls}" viewBox="${vb}" role="img" aria-label="Aoife Brennan" xmlns="http://www.w3.org/2000/svg">${AOIFE_ART}</svg>`;
+const AOIFE_FULL=()=>aoifeArt("0 30 400 440","aoife-full");
+const AOIFE_FACE=()=>`<span class="av av-aoife">${aoifeArt("138 76 124 124","")}</span>`;
+/* ---------- State ---------- */
+const KEY="ledgerpoint-cases-v1";
+const fresh=()=>({stage:"intro",i:0,dec:{},cred:70,escal:[],push:null,rtab:"policy",b:0,bAns:{},ret:null,mode:"training"});
+let S=fresh();
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.dec&&s.stage!=="debrief")S=Object.assign(fresh(),s)}catch(e){}
+S.mode="training";
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let tt;const toast=m=>{const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)};
+let FLAGOPEN=false;
+
+
+/* ---------- Briefing ---------- */
+const BRIEF=[
+ {id:"what",title:"What an access review is",body:[
+   "An access review checks that every account in a system is still needed, was properly approved, and gives the person only what their job requires.",
+   "To check whether someone's access fits their job, you use a <b>role matrix</b>. It's a table, approved by whoever owns the system, that lists which roles each job is allowed. If someone has a role that isn't listed for their job, they have more access than they need.",
+   "Finance systems are high risk: misuse could cause serious damage. There are two kinds. The first is <b>fraud</b>: money paid out wrongly, fake suppliers, wrong accounts. The second is a <b>data breach</b>: sensitive information such as staff salaries, bank details and tax ID numbers seen or copied by someone who shouldn't have it. That's why finance systems get more attention than most.",
+   "Data protection law applies too. Most countries require serious data breaches to be reported to a regulator, often within days. In the EU, for example, the General Data Protection Regulation (GDPR) sets a 72-hour deadline.",
+   "If one of those accounts fell into the hands of an attacker, such as a hacker who stole the password, they could pay themselves, change a supplier's bank details, copy staff and customer data, or cover their tracks. External auditors test these reviews every year for that reason."],
+  ex:"Your job isn't to decide what access people should have. It's to compare what they have against what the policy says, and report the gaps.",
+  q:"Why do auditors focus on access to finance systems?",
+  opts:[["To keep software licence costs down",0,"Licence costs matter to IT, but that's not why auditors care."],["Because they're high risk: they hold sensitive financial data and run critical processes, so misuse or a breach could do serious damage",1,"Right. Finance systems usually hold sensitive information, such as bank account details, staff salaries, supplier payments and the company's accounts. They also run critical processes, such as paying staff and suppliers, collecting money from customers, and producing the financial reports the company is judged on. If the wrong person gets in, the result could be stolen money, missed payroll or wrong accounts. That's why access to them needs to be tightly controlled."],["Because IT asked them to",0,"Auditors set their own priorities, based on risk."]]},
+ {id:"jml",title:"Joiners, movers and leavers",body:[
+   "<b>Joiners</b> need an approved request before they get access. <b>Movers</b> change job and must lose the access they no longer need. <b>Leavers</b> must lose all access on or before their last working day, or at the moment they're told if they're dismissed.",
+   "HR's list tells you who joined, moved or left, and when. Compare it with each account's status, roles and dates."],
+  ex:"A leaver's access must be <b>disabled on or before their last day</b>.<br><br><b>Why it matters.</b> If the account stays open:<ul style='margin:6px 0 0;padding-left:18px'><li>A disgruntled leaver could delete records, change data or damage systems out of revenge.</li><li>Nobody is watching the account, so an attacker could use it without anyone noticing.</li><li>Auditors and regulators treat it as a failed control.</li></ul>",
+  q:"Someone's last day is Friday 28 August. When must their access be disabled?",
+  opts:[["On or before Friday 28 August",1,"Right. Access should go on or before the last working day, so there's no gap where a former employee can still log in. In practice this depends on HR telling IT in time, and that handover is where it usually breaks down. Leavers keeping access is one of the most common findings in any access review, and auditors always check for it."],["Monday 31 August, the next working day",0,"That leaves a whole weekend where a former employee could still log in. It must be on or before their last day."],["Within a week, once IT gets the ticket",0,"Far too late. A leaver's access should never outlive their employment."]]},
+ {id:"sod",title:"Segregation of duties",body:[
+   "No single person should be able to complete a sensitive transaction from start to finish. If one person can create a payment <b>and</b> approve it, nobody checks their work.",
+   "<b>An everyday example:</b> you can submit an expense claim, but you can't approve it yourself. Your manager does. If you could do both, you could claim anything and nobody would know.",
+   "<b>In a finance system:</b> a clerk creates a €5,000 payment to a supplier. A second person checks the invoice and approves it. If the clerk could also approve, they could set up a fake supplier, pay it, and nobody would ever see the payment.",
+   "The <b>SoD matrix</b> lists the pairs of roles that must never sit on the same account. Check every account's roles against it.",
+   "Any pair <b>not</b> on the matrix is allowed, even if it looks powerful."],
+  ex:"You'll often hear: <i>\"He only does both when his manager is off.\"</i> Sometimes that's genuinely needed, but it has to be <b>signed off in writing</b> by someone senior. If there's no written sign-off, it's still a finding.",
+  q:"Which of these is a segregation of duties conflict?",
+  opts:[["One person can view finance reports and approve payments",0,"Viewing reports doesn't let them complete a payment on their own. No conflict."],["One person can create a payment and approve it",1,"Right. If one person can create a payment and approve it, nobody checks their work. They could pay a fake supplier or themselves, and it would look like a normal approved payment. Splitting the steps between two people means fraud needs two people working together, which is far less likely."],["Two people share the job of approving payments",0,"Sharing a task between people is fine. The problem is one person doing every step."]]},
+ {id:"dormant",title:"Dormant and suspended accounts",body:[
+   "A <b>dormant</b> account is one nobody has used for a long time. It's a risk because nobody is watching it. If someone else got hold of the password, nobody would notice them using it, whether to make changes or quietly copy data out.",
+   "Most policies set a limit, such as a few months without a login, after which the account must be disabled.",
+   "People on long leave, like maternity leave or a career break, are different. Their account is <b>suspended</b>: blocked while they're away, and switched back on when they return."],
+  ex:"Not everything that looks wrong is wrong. An old login date on its own isn't enough. Check why before you raise a finding.",
+  q:"A colleague is starting six months of maternity leave. What should happen to her account?",
+  opts:[["Leave it active so it's ready when she's back",0,"Nobody would be using or watching it for six months. That's exactly the risk."],["Suspend it until she returns",1,"Right. Suspending blocks the account while she's away, but keeps her access ready to switch back on when she returns. An active account that nobody uses for months is a favourite target. If someone else gets the password, nobody notices them using it, or reading and copying what it can see."],["Delete it",0,"She's coming back. Deleting it means rebuilding all her access from scratch."]]},
+ {id:"tickets",title:"Approvals and shared accounts",body:[
+   "Nobody should get access just by asking IT. Access should be <b>requested</b> and <b>approved</b> by the right people, usually their manager and whoever owns the system. That approval is the evidence that someone agreed the person needs it.",
+   "In most organisations this happens through an <b>access request ticket</b> in the IT service desk system. The ticket records who asked, which roles, who approved it (usually the line manager and the system owner), and when IT set the access up. In the review, you compare the ticket with what the person actually has.",
+   "Each case shows the account's <b>ticket history</b>. Approvals are tested for access granted <b>this quarter</b>. Older tickets were covered by earlier reviews, but they still tell you how the account was set up.",
+   "People should get <b>exactly what was approved</b>, nothing extra. Extra access was never agreed by anyone.",
+   "<b>Shared accounts</b>, where several people use one login, are a problem too. The system only records the shared login, not the person. So if a wrong payment is made or data is deleted, it can be difficult to trace which person did it. Best practice is one named account per person.",
+   "Systems don't label an account as shared, so you have to spot it. Look for clues: <b>no employee ID</b>, <b>a name that isn't a person</b> (like \"Admin\" or \"Temp\"), and <b>no match on HR's records</b>."],
+  ex:"Think of it like a building pass. Someone signs off what doors you can open, and the pass has your name on it. A pass nobody signed for, or one the whole team shares, defeats the point.",
+  q:"A new starter was approved for access to enter invoices. Later they messaged someone in IT: \"I might need access to approve payments too.\" IT added it straight away. What's the problem?",
+  opts:[["The extra access was never approved",1,"Right. A message to IT isn't an approval. Nobody with authority checked whether the new starter actually needed to approve payments. Combined with entering invoices, that access would let them create and approve their own payments. This is how access creep starts: small extras added informally, one request at a time."],["Nothing, the starter asked for it themselves",0,"Asking isn't the same as being approved. Their manager and the system owner never agreed to it."],["IT should have given them a shared login instead",0,"Shared logins make it impossible to tell who did what."]]},
+ {id:"priv",title:"Privileged accounts",body:[
+   "Most people have a <b>normal account</b>. It lets them do their own job and nothing more. In LedgerPoint, an AP Clerk can enter invoices, but can't approve them, change settings or give anyone access.",
+   "A <b>privileged account</b> has more power than a normal account. What that means depends on the role. Some privileged roles can do one or two powerful things, such as resetting passwords or seeing data other users can't. The most powerful, such as a system administrator, can control the whole system: create and delete users, give anyone access (including themselves) and change how it works. In LedgerPoint, the privileged role is <b>Sys_Admin</b>.",
+   "<b>Why the difference matters.</b> If a normal account is misused, the damage is limited to what that one person's job allows. A privileged account can reach much further, and the most powerful have very few limits. In the hands of a malicious user, such as an attacker who stole it or an employee acting in bad faith, the damage can be serious. Depending on what the role allows, they could:",
+   "<ul><li><b>Steal data.</b> See and copy sensitive information such as customer, staff or financial data. That's a data breach.</li><li><b>Change or destroy data.</b> Alter or delete records, so the organisation can no longer trust its own information, and fraud can be hidden.</li><li><b>Shut the business down.</b> Lock people out, delete data or install ransomware, so the system can't be used.</li><li><b>Keep a way back in.</b> Create hidden accounts for themselves, so they can return even after the stolen password is changed.</li><li><b>Spread to other systems.</b> Privileged accounts often connect to other systems or hold their passwords. An attacker could use one as a stepping stone into email, file shares or HR systems, and do the same damage there. This is called lateral movement.</li></ul>",
+   "A stolen normal account is a problem. A stolen privileged account can do far more harm, and the most powerful can take control of the whole system and reach beyond it. That's why privileged access is given out sparingly, and privileged accounts get extra attention in every access review."],
+  ex:"Look at privileged accounts first. For each one, ask: does this person's job genuinely need this level of access? If it doesn't, that's a finding, and usually a serious one.",
+  q:"Why do access reviews give privileged accounts extra attention?",
+  opts:[["Because the people who hold them are more likely to be dishonest",0,"It's not about the people. Most admins are trustworthy. It's about what the account could do if it fell into the wrong hands."],["Because in the wrong hands they can do far more damage than a normal account",1,"Right. A stolen normal account is limited to what that one job allows. A privileged account can create users, change permissions and settings, and delete data, and can be a stepping stone into other systems. That's why privileged access is given out sparingly and checked first."],["Because they cost more in software licences",0,"Licence costs aren't the reason. The risk is what the account could be used to do."]]},
+ {id:"severity",title:"Rating severity",body:[
+   "Not every finding is equally serious. Severity tells the business which ones to fix first.",
+   "To judge it, ask two questions: <b>what harm could this access do, by moving money or exposing sensitive data</b>, and <b>is it being used?</b>",
+   "<b>Critical:</b> harm may be happening right now. <b>High:</b> could lead to fraud or a serious breach. <b>Medium:</b> a real gap, but less direct harm. <b>Low:</b> tidy-up, with little impact."],
+  ex:"Severity is a judgement, so be ready to explain yours. Someone who can move money is very different from someone who can only look at reports. But looking still matters if the reports hold salaries or bank details.",
+  q:"Which of these is the most serious?",
+  opts:[["An unused account that can only view reports",0,"It's lower risk: it can't change anything, and nobody's using it. But it isn't harmless, because what it can see still matters."],["A former employee who can still move money, and logged in last week",1,"Right. Two things make it Critical. The access is powerful, because it can move money and see supplier bank details. And it's being used: someone who no longer works there logged in last week. Harm could be happening right now, so this one gets escalated, not just reported."],["A current employee with one role more than they need, which they never use",0,"Worth fixing, but nothing harmful is happening."]]},
+ {id:"judgement",title:"Escalate, report, or hold firm",body:[
+   "Most findings go in your <b>report</b>, and the business fixes them in the normal way.",
+   "<b>Escalate</b>, meaning tell your manager straight away, only when something could be causing harm right now. Raising the alarm too often means people stop listening.",
+   "People will sometimes disagree with a finding. Stay polite and ask for <b>evidence</b>, like a written sign-off. If they can show it, drop the finding. If they can't, it stays."],
+  ex:"You're not there to win arguments. You're there to make sure the report is backed by evidence.",
+  q:"A manager says, \"That's always been allowed here.\" What should you do?",
+  opts:[["Ask them to show you where it was approved",1,"Right. Ask for the evidence, such as a signed exception or an approval email. If they can show it, there's no finding and you've lost nothing. If they can't, the finding stays, and you've handled it politely and professionally. \"It's always been allowed\" often means it was agreed verbally years ago and never written down."],["Remove the finding to keep the peace",0,"That leaves a real risk unreported."],["Escalate it to your manager immediately",0,"Nothing urgent is happening. Ask for the evidence first."]]},
+ {id:"policy",title:"The policy: your rulebook",body:[
+   "A <b>policy</b> is a company's written rules for how something must be done. It's approved by senior management, so everyone in the company has to follow it.",
+   "In an audit, the policy is what you <b>measure against</b>. You don't judge access by what seems sensible to you. You compare what you find with what the policy says should happen.",
+   "Every finding has two halves: <b>what you found</b>, and <b>the rule it breaks</b>. Each rule in the policy has a number, like 4.3, so you can point to it exactly.",
+   "Read each rule in full. Many have conditions or exceptions, and missing them leads to wrong findings."],
+  ex:"If you can't point to the rule that's been broken, it's an opinion, not a finding. In the job, the policy is in the panel beside every case.",
+  q:"Something looks risky to you, but you can't find a rule in the policy that it breaks. What should you do?",
+  opts:[["Raise it as a finding anyway",0,"Without a rule behind it, the business can rightly push back. It's your opinion, not a breach."],["Don't raise a finding, but mention it to your manager as a possible gap in the policy",1,"Right. A finding needs a rule it breaks, or the business can rightly push back that it's just your opinion. But spotting risks the policy doesn't cover is valuable too. Raising them as policy gaps means the policy gets improved, and that's often where an auditor adds the most value."],["Ignore it",0,"A real risk is still worth mentioning, even if it isn't a finding."]]}
+];
+const HINTS={
+ cmurray:"Start with three questions: is this person still here, do their roles fit their job, and has the account been used recently? If all three are fine, stamp No issue. The ticket history shows how the account was set up. You only test approvals for access granted this quarter.",
+ afitzgerald:"This account was created this quarter. Look at the access request section. Every new account needs an approved ticket (4.1).",
+ omurphy:"The last login was months ago, but check the status and the HR record before you decide. Clause 4.5 has two parts."
+};
+const REVIEW={cbyrne:"jml",mdoherty:"sod",ecoyle:"tickets","fin.temp01":"tickets",lquinn:"jml",afitzgerald:"tickets",rkelly:"dormant",omurphy:"dormant",swalsh:"sod",pgill:"jml",egallagher:"jml",hdaly:"tickets",treilly:"tickets",cmurray:"what",bnolan:"sod",dmoran:"priv",fkerr:"policy"};
+const cardIdx=id=>BRIEF.findIndex(c=>c.id===id);
+function brief(){
+  const c=BRIEF[S.b],ans=S.bAns[S.b];
+  const dots=BRIEF.map((x,n)=>`<button class="dot ${S.bAns[n]!=null&&BRIEF[n].opts[S.bAns[n]][1]?"ok":""}" data-bgo="${n}" aria-current="${n===S.b}" aria-label="${esc(x.title)}">${n+1}</button>`).join("");
+  const done=ans!=null&&c.opts[ans][1];
+  const last=S.b===BRIEF.length-1;
+  const back=S.ret==="debrief"?`<button class="btn" data-act="todebrief">Back to debrief</button>`:S.ret==="cases"?`<button class="btn" data-act="tocases">Back to the cases</button>`:"";
+  $("app").innerHTML=`<div class="queue">${dots}<span style="flex:1"></span>${back}${!S.ret?`<button class="btn" data-act="skipbrief">Skip to the job</button>`:""}</div>
+  <div class="sheet">
+   <div class="eyebrow">Briefing ${S.b+1} of ${BRIEF.length}</div>
+   <h1>${c.title}</h1>
+   ${c.body.map(p=>p.startsWith("<ul")?p:`<p>${p}</p>`).join("")}
+   <div class="aoife-note">${AOIFE_FACE()}<div><span class="tag">From Aoife</span><span>${c.ex}</span></div></div>
+   <fieldset style="gap:8px"><legend style="font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600">${esc(c.q)}</legend>
+    ${MIX(c.opts).map(([o,n])=>{const picked=ans===n;const cls=picked?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"";
+      return`<button class="btn" style="text-align:left;${cls}" data-ans="${n}" ${done?"disabled":""}>${esc(o[0])}</button>`}).join("")}
+   </fieldset>
+   ${ans!=null?`<p class="small" style="margin:0;color:${c.opts[ans][1]?"var(--green)":"var(--red)"}"><b>${c.opts[ans][1]?"Correct.":"Not quite."}</b> ${esc(c.opts[ans][2])}${c.opts[ans][1]?"":" Try again."}</p>`:""}
+   <div class="row" style="justify-content:space-between"><button class="btn" data-act="bprev" ${S.b===0?"disabled":""}>Previous</button>
+    ${S.ret?(last?"":`<button class="btn primary" data-act="bnext">Next card</button>`):`<button class="btn primary" data-act="${last?"startjob":"bnext"}" ${done?"":"disabled"}>${last?"Start the job":"Next card"}</button>`}</div>
+  </div>`;
+}
+/* ---------- Render ---------- */
+function render(){renderStats();({intro,brief,cases,debrief})[S.stage]();save()}
+function renderStats(){
+  const done=Object.keys(S.dec).length,flags=Object.values(S.dec).filter(d=>d.t==="flag").length;
+  $("stats").innerHTML=`<div class="stat"><small>Cases</small><b>${done} / ${ORDER.length}</b></div><div class="stat"><small>Findings</small><b>${flags}</b></div><div class="stat"><small>Credibility</small><b>${S.cred}</b></div><div class="stat"><small>Export date</small><b>Fri 9 Oct 2026</b></div>${S.stage==="cases"?`<button class="linkbtn" data-act="openbrief">Briefing notes</button>`:""}<button class="linkbtn" data-act="restart">Restart</button>`;
+}
+const JOBS_HTML=()=>`<div class="jobs"><h3>Your jobs at Northbay</h3>
+  <div class="job open"><span class="job-n">Job 01</span><div><b>LedgerPoint access review</b><span class="small muted">Check who has access to the finance system, and whether they should.</span></div><span class="job-s">Open</span></div>
+  <a class="job open" style="text-decoration:none;color:inherit" href="job01-stage2.html"><span class="job-n">Job 01 · Stage 2</span><div><b>Write the report</b><span class="small muted">Turn your LedgerPoint findings into a report the audit committee can act on.</span></div><span class="job-s">Open </span></a>
+  <div class="job locked"><span class="job-n">Job 02</span><div><b>Vendor risk review: CloudPay Ltd</b><span class="small muted">Procurement wants to sign a new payments supplier. Review their SOC 2 report and security questionnaire before the contract goes ahead.</span></div><span class="job-s">Coming soon</span></div></div>`;
+function intro(){
+  $("app").innerHTML=`<div class="sheet">
+   <div class="intro-top">${AOIFE_FULL()}<div><div><b>Aoife Brennan</b><div class="small muted">GRC Manager</div></div>
+   <h1>Stage 1: The access review</h1></div></div>
+   <p>LedgerPoint is our finance system. People use it to enter invoices, set up suppliers, approve and release payments, and run payroll, so it's high on the external auditors' list.</p>
+   <p>I've pulled together <b>${ORDER.length} case files</b>, one per account. Each shows the account, any HR changes this quarter, and any access request ticket. Check each one against the Access Control Policy on the right, then stamp it.</p>
+   <ul><li><b>No issue</b> if it meets policy.</li><li><b>Raise finding</b> if it breaks a clause. Pick the issue, the clause and a severity.</li><li><b>Note a policy gap</b> if something looks risky but no rule in the policy covers it.</li><li>False positives cost credibility, so only raise what the evidence supports.</li><li>If something looks like an <b>active security issue</b>, use <b>Escalate to Aoife</b> straight away. Don't wait for the report.</li></ul>
+   <p class='small muted' style='margin:0'>Sinéad agreed the terms of reference, and Declan sent the export on 9 October. Its 17 accounts match the user count in the LedgerPoint admin console. Haven't planned the audit yet? <a href='job01-stage0.html' target='_blank' rel='noopener'>Play Stage 0: plan the audit</a> first.</p>
+   <p>New to access reviews? Do the <b>10-minute briefing</b> first. It covers everything you need, with a quick check after each card.</p><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" data-act="beginbrief">Start the briefing</button><button class="btn" data-act="start">Skip to the job</button></div><p class="small muted" style="margin:0"><a href="job01.html">All Job 01 stages</a></p></div>`;
+}
+function cases(){
+  const id=ORDER[S.i],u=U[id],emp=u[1],hr=HR[emp],tks=TICKETS[id]||[],d=S.dec[id];
+  const inQ=u[7]>="2026-07-01";
+  const field=(l,v)=>`<div><span>${l}</span><b>${esc(v||"—")}</b></div>`;
+  const queue=ORDER.map((k,n)=>`<button class="dot ${S.dec[k]?S.dec[k].t:""}" data-go="${n}" aria-current="${n===S.i}" aria-label="Case ${n+1}">${n+1}</button>`).join("");
+  const allDone=Object.keys(S.dec).length===ORDER.length;
+  $("app").innerHTML=`
+  <div class="queue">${queue}<span style="flex:1"></span>${allDone?`<button class="btn primary" data-act="finish">Submit report to Aoife</button>`:`<span class="small muted">Submit once all ${ORDER.length} are stamped</span>`}</div>
+  <div class="grid">
+   <div class="left">
+    <article class="case" aria-labelledby="ch">
+     ${d?`<span class="stamp ${d.t}">${d.t==="ok"?"No issue":d.t==="gap"?"Policy gap":"Finding"}</span>`:""}
+     <div class="casehead"><div><div class="eyebrow">Case ${S.i+1} of ${ORDER.length} · ${esc(id)}</div><h1 id="ch">${esc(u[0])}</h1></div></div>
+     ${HINTS[id]?`<div class="aoife-note" style="margin-right:120px">${AOIFE_FACE()}<div><span class="tag">Hint from Aoife</span><span class="small">${HINTS[id]}</span></div></div>`:""}
+     <section class="sec"><h2>LedgerPoint account</h2>
+      <div class="kv">${field("Department",u[2])}${field("Job title",u[3])}${field("Employee ID",emp)}${field("Status",u[6])}${field("Created",u[7])}${field("Last login",u[8])}${field("Disabled on",u[9])}${u[10]!=null?field("Access end date",u[10]):""}</div>
+      <div style="display:grid;gap:4px"><span style="font-size:11px;color:var(--muted)">Roles assigned in LedgerPoint</span><div class="roles">${u[4].split(";").map(r=>`<span class="role">${r}</span>`).join("")}</div></div></section>
+     <section class="sec"><h2>HR record, Jul–Sep</h2>
+      ${hr?`<div class="kv">${field("Event",hr[0])}${field("Effective",hr[1])}${hr[2]?field("From",hr[2]):""}${hr[3]?field("To",hr[3]):""}${hr[4]?field("Notes",hr[4]):""}</div>`:`<p class="none" style="margin:0">${emp?"No HR changes this quarter.":"No employee ID, so there's no HR record for this account."}</p>`}</section>
+     <section class="sec"><h2>Tickets on this account</h2>
+      ${tks.length?tks.map(tk=>`<div class="kv" style="padding-top:4px">${field("Ticket",tk[0])}${field("Requested",tk[1])}${field("Roles requested",tk[2])}${field("Line manager approval",tk[3])}${field("System owner approval",tk[4])}${field("Set up",tk[5])}</div>`).join('<hr style="border:0;border-top:1px dotted var(--paper-line);margin:4px 0">'):`<p class="none" style="margin:0">No tickets found for this account.</p>`}</section>
+    </article>
+    <div class="tray" id="tray">${tray(id,d)}</div>
+   </div>
+   <aside class="rules" aria-label="Rulebook">${rulebook()}</aside>
+  </div>`;
+}
+function feedback(id,d){
+  const t=TRUTH[id];let ok,head,why,extra="";
+  if(t){
+    why=t.why;
+    if(d.t==="flag"){
+      const iOk=t.ok.includes(d.issue),cOk=d.cl.some(c=>t.cl.includes(c)),sd=Math.abs(SEVS.indexOf(d.sev)-SEVS.indexOf(t.sev));
+      const notes=[];if(!iOk)notes.push(`the issue is better described as "${ISSUES[t.ok[0]]}"`);if(!cOk)notes.push(`the rule broken is ${t.cl.join(" or ")}`);if(sd)notes.push(`severity should be ${t.sev} (${SEVHELP[t.sev].replace(/\.$/,"").toLowerCase()})`);
+      ok=iOk&&cOk&&!sd?"yes":iOk&&cOk?"part":"part";head=iOk&&cOk&&!sd?"Correct. This is a finding.":iOk&&cOk?"Right finding, different severity.":"Right to raise it, but some details are off.";
+      if(notes.length)extra=`Note: ${notes.join("; ")}.`;
+    } else if(d.t==="gap"){ok="no";head="Not quite. The policy does cover this, so it's a finding."}
+    else {ok="no";head=d.dropped?"You removed this finding after Sinéad's pushback.":"Not quite. This one breaks the policy."}
+    if(id==="cbyrne"&&!S.escal.includes("cbyrne"))extra+=` <b>This is also a live security issue.</b> Someone used the account after he left. Use <b>Escalate to Aoife</b> now.`;
+  } else if(id==="fkerr"){
+    why=FINE[id];
+    if(d.t==="gap"){ok="yes";head="Correct. This is a policy gap."}
+    else if(d.t==="flag"){ok="no";head="Not quite. No rule is broken here, so it can't be a finding."}
+    else {ok="no";head="Not quite. Nothing's broken, but something is missing from the policy."}
+  } else {
+    why=FINE[id];
+    if(d.t==="ok"){ok="yes";head="Correct. No issue."}
+    else if(d.t==="flag"){ok="no";head="Not quite. This one meets the policy."}
+    else {ok="no";head="Not quite. The policy covers this, and it's met."}
+  }
+  const col=ok==="yes"?"var(--green)":ok==="part"?"var(--amber)":"var(--red)",bg=ok==="yes"?"var(--green-soft)":ok==="part"?"var(--amber-soft)":"var(--red-soft)";
+  const card=REVIEW[id]!=null?BRIEF[cardIdx(REVIEW[id])]:null;
+  return`<div role="status" style="border-left:4px solid ${col};background:${bg};border-radius:0 10px 10px 0;padding:12px 14px;display:grid;gap:6px">
+    <b style="color:${col}">${head}</b><span>${esc(why)}</span>${extra?`<span class="small">${extra}</span>`:""}
+    ${ok!=="yes"&&card?`<button class="btn" style="justify-self:start" data-review="${REVIEW[id]}">Review: ${esc(card.title)}</button>`:""}</div>`;
+}
+function tray(id,d){
+  if(!FLAGOPEN&&S.mode==="training"&&d){
+    const nx=ORDER.findIndex((k,n)=>n>S.i&&!S.dec[k]),any=ORDER.findIndex(k=>!S.dec[k]);
+    return`${feedback(id,d)}<div class="trayrow"><button class="btn" data-act="prev" ${S.i===0?"disabled":""}>Previous</button><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn esc" data-act="escalate">Escalate to Aoife</button>${nx>=0||any>=0?`<button class="btn primary" data-act="nextopen">Next case</button>`:`<button class="btn primary" data-act="finish">Submit report to Aoife</button>`}</div></div>`;
+  }
+  if(!FLAGOPEN){
+    return`<div class="trayrow"><div style="display:flex;flex-wrap:wrap;gap:10px"><button class="big ok" data-stamp="ok">No issue</button><button class="big flag" data-act="openflag">Raise finding</button><button class="big gap" data-stamp="gap">Note a policy gap</button></div>
+     <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn" data-act="prev" ${S.i===0?"disabled":""}>Previous</button><button class="btn" data-act="next" ${S.i===ORDER.length-1?"disabled":""}>Skip</button><button class="btn esc" data-act="escalate">Escalate to Aoife</button></div></div>
+     ${d&&d.t==="flag"?`<p class="small muted" style="margin:0">Your finding: ${esc(ISSUES[d.issue])} · clause ${d.cl.join(", ")} · ${d.sev}. Restamp to change it.</p>`:""}`;
+  }
+  const f=d&&d.t==="flag"?d:{issue:"",cl:[],sev:""};
+  return`<fieldset><legend>What's the issue?</legend><div class="chips">${Object.entries(ISSUES).map(([v,l])=>`<label><input type="radio" name="issue" value="${v}" ${f.issue===v?"checked":""}>${l}</label>`).join("")}</div></fieldset>
+   <fieldset><legend>Which clause does it break?</legend><div class="chips mono">${Object.entries(CLAUSES).map(([c,l])=>`<label title="${l}"><input type="checkbox" name="cl" value="${c}" ${f.cl.includes(c)?"checked":""}>${c} ${l}</label>`).join("")}</div></fieldset>
+   <fieldset><legend>Severity</legend><div class="chips">${SEVS.map(s=>`<label title="${SEVHELP[s]}"><input type="radio" name="sev" value="${s}" ${f.sev===s?"checked":""}>${s}</label>`).join("")}</div>
+   <p class="small muted" style="margin:0"><b>Low</b> housekeeping · <b>Medium</b> a real gap, less direct harm · <b>High</b> could lead to fraud or a serious breach · <b>Critical</b> harm may be happening now. <button class="linkbtn" style="color:var(--accent)" data-rtab="severity">See the severity guide</button></p></fieldset>
+   <p class="err" id="err" hidden></p>
+   <div class="row"><button class="btn" data-act="cancelflag">Cancel</button><button class="big flag" data-stamp="flag">Stamp finding</button></div>`;
+}
+function rulebook(){
+  const tabs=[["policy","Policy"],["matrix","Role matrix"],["sod","SoD matrix"],["roles","Roles"],["severity","Severity"]];
+  let body="";
+  if(S.rtab==="policy")body=[
+   ["4.1","<b>Approval.</b> Access needs a ticket approved by the line manager and the system owner. What's provisioned must match what was approved."],
+   ["4.2","<b>Least privilege.</b> Users may only hold the roles listed for their job in the role matrix."],
+   ["4.3","<b>Leavers.</b> All access removed on or before the leaving date recorded by HR. For dismissals, at or before the time the person is told."],
+   ["4.4","<b>Movers.</b> Old access removed within 5 working days of a role change."],
+   ["4.5","<b>Dormant.</b> Accounts unused for 90 days must be disabled. Staff on approved leave over 90 days: set to Suspended."],
+   ["4.6","<b>Shared accounts.</b> Shared or generic accounts used by people are prohibited."],
+   ["4.7","<b>Segregation of duties.</b> No account may hold a pair of roles listed in the SoD matrix."],
+   ["4.8","<b>Privileged access.</b> Privileged access must be limited to job roles that require it. In LedgerPoint, Sys_Admin is permitted only for the IT Systems Administrator and IT Infrastructure Lead."]
+  ].map(c=>`<div class="clause"><b>${c[0]}</b><span>${c[1]}</span></div>`).join("")+`<p class="note"><b>Exceptions</b> must be approved by the CISO and recorded in the Exceptions Register. None are recorded for LedgerPoint.</p>`;
+  if(S.rtab==="sod")body=`<table><tbody>${[["AP_Clerk","AP_Approver","Create and approve a payment"],["AP_Clerk","Payment_Release","Create and release a payment"],["AP_Clerk","Supplier_Maintain","Set up a fake supplier and pay it"],["Supplier_Maintain","Payment_Release","Change bank details and release payment"],["GL_Journal","GL_Approver","Post and approve journals"],["Sys_Admin","Any business role","Grant yourself access and transact"]].map(r=>`<tr><td class="m">${r[0]}<br>+ ${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table><p class="note">Any pair not listed here is allowed.</p>`;
+  if(S.rtab==="matrix")body=`<p class="note" style="padding:0 0 6px">Approved by Sinéad Walsh, system owner, 15 Jan 2026. A job not listed here needs no LedgerPoint access.</p><table><tbody>${[["AP Clerk","AP_Clerk"],["Senior AP Clerk","AP_Clerk"],["AP Supervisor","AP_Approver, Supplier_Maintain"],["Financial Controller","AP_Approver, GL_Approver, Report_Viewer"],["Management Accountant","GL_Journal, Report_Viewer"],["AR Accountant","AR_Clerk, Report_Viewer"],["Payroll Manager","Payroll_Processor, Report_Viewer"],["Payroll Officer","Payroll_Processor"],["Head of Treasury","Payment_Release, Report_Viewer"],["Operations Analyst","Report_Viewer"],["IT Systems Administrator","Sys_Admin"],["IT Infrastructure Lead","Sys_Admin"],["External auditor or consultant","Report_Viewer"],["Any job not listed","No LedgerPoint access"]].map(r=>`<tr><td>${r[0]}</td><td class="m" style="white-space:normal">${r[1]}</td></tr>`).join("")}</tbody></table>`;
+  if(S.rtab==="roles")body=`<table><tbody>${[["AP_Clerk","Enter invoices, create payment requests"],["AP_Approver","Approve payment requests"],["Payment_Release","Release payment runs to the bank"],["Supplier_Maintain","Create suppliers, change bank details"],["AR_Clerk","Manage customer receipts"],["GL_Journal","Post journals"],["GL_Approver","Approve journals"],["Payroll_Processor","Run payroll"],["Report_Viewer","Read-only reporting"],["Sys_Admin","Full administration"]].map(r=>`<tr><td class="m">${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</tbody></table>`;
+  if(S.rtab==="severity")body=`<p class="note" style="padding:0 0 8px">Ask two questions: <b>what could this access do?</b> and <b>is it being used?</b> The more harm it could do, and the more likely it's being used, the higher the severity.</p>${[
+   ["Critical","var(--red)","Harm may be happening right now. Powerful access is held by someone who shouldn't have it, and it's being used.","A leaver who can change supplier bank details logged in after leaving. Escalate it as well as reporting it."],
+   ["High","var(--red)","Could directly lead to fraud or a serious breach, even if nothing has happened yet.","One person can create and approve payments. A shared account can create payments, so nobody can be held responsible."],
+   ["Medium","var(--amber)","A real control failure, but the access itself does less direct harm.","A new starter has the right role for their job, but nobody approved it."],
+   ["Low","var(--green)","Housekeeping. The access can't change anything, and isn't being used.","An unused account that can only view basic reports. If the reports held sensitive data, it would rate higher."]
+  ].map(r=>`<div class="clause" style="grid-template-columns:70px 1fr"><b style="color:${r[1]};font-family:var(--sans)">${r[0]}</b><span>${r[2]}<br><span class="muted small">Example: ${r[3]}</span></span></div>`).join("")}<p class="note">Severity is a judgement. Be ready to explain yours to Aoife.</p>`;
+  return`<div class="rtabs" role="tablist">${tabs.map(t=>`<button class="rtab" role="tab" data-rtab="${t[0]}" aria-selected="${S.rtab===t[0]}">${t[1]}</button>`).join("")}</div><div class="rbody">${body}</div>`;
+}
+
+/* ---------- Actions ---------- */
+function stamp(t){
+  const id=ORDER[S.i];
+  if(t==="flag"){
+    const issue=document.querySelector('input[name="issue"]:checked'),cl=[...document.querySelectorAll('input[name="cl"]:checked')].map(i=>i.value),sev=document.querySelector('input[name="sev"]:checked');
+    if(!issue||!cl.length||!sev){const e=$("err");e.textContent="Pick an issue, at least one clause and a severity.";e.hidden=false;return}
+    S.dec[id]={t:"flag",issue:issue.value,cl,sev:sev.value};
+  } else {
+    S.dec[id]={t};
+  }
+  FLAGOPEN=false;render();
+  if(t==="flag"&&id==="mdoherty"&&!S.push){setTimeout(pushback,700);return}
+  if(S.mode==="training")return;
+  setTimeout(()=>{const nx=ORDER.findIndex((k,n)=>n>S.i&&!S.dec[k]),any=ORDER.findIndex(k=>!S.dec[k]);const to=nx>=0?nx:any;if(to>=0){S.i=to;render()}},650);
+}
+function pushback(){
+  S.push="open";save();
+  $("modal").innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ph">
+   <div class="who"><span class="av" style="background:#3d8a68">SW</span><div><b>Sinéad Walsh</b><div class="small muted">Financial Controller · LedgerPoint system owner</div></div></div>
+   <h2 id="ph">"Do we really need this in the report?"</h2>
+   <p>I see you've flagged Mark. He covers approvals when the AP Supervisor role is empty. That's been agreed for years. The audit committee will read this report.</p>
+   <div style="display:grid;gap:8px"><button class="btn" data-push="ask">Ask her for the approval of that arrangement</button><button class="btn" data-push="drop">Agree and remove the finding</button><button class="btn" data-push="escalate">Pass it to Aoife to decide</button></div></div></div>`;
+}
+function answerPush(c){
+  const reply={ask:["Sinéad Walsh","#3d8a68","SW","Fair point. Ciarán and I approved it on a ticket in 2023, but nobody ever asked the CISO for an exception. Leave it in. I'll ask the CISO for a proper exception and review Mark's approvals myself in the meantime."],
+    drop:["Sinéad Walsh","#3d8a68","SW","Thanks, appreciate that."],
+    escalate:["Aoife Brennan","#2457a6","AB","Keep it in. The policy is clear and there's no exception. Next time, try asking Sinéad for the evidence first. It's quicker and builds the relationship."]}[c];
+  if(c==="ask")S.cred=Math.min(100,S.cred+6);
+  if(c==="drop")S.dec.mdoherty={t:"ok",dropped:true};
+  S.push=c;
+  $("modal").innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="rh"><div class="who">${reply[2]==="AB"?AOIFE_FACE():`<span class="av" style="background:${reply[1]}">${reply[2]}</span>`}<div><b id="rh">${reply[0]}</b></div></div><p>${reply[3]}</p><div class="row"><button class="btn primary" data-act="closepush">Back to the cases</button></div></div></div>`;
+  render();
+}
+function openEscalate(){
+  const id=ORDER[S.i];
+  $("modal").innerHTML=`<div class="scrim" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="eh">
+   <h2 id="eh">Escalate ${esc(U[id][0])} to Aoife?</h2>
+   <p class="muted">Only for something that could be causing harm right now. Everything else belongs in the report, and unnecessary escalations cost credibility.</p>
+   <div class="row"><button class="btn" data-act="close">Cancel</button><button class="btn esc" data-act="sendesc">Escalate now</button></div></div></div>`;
+}
+function sendEsc(){
+  const id=ORDER[S.i];
+  if(S.escal.includes(id)){$("modal").innerHTML="";toast("You've already escalated this account.");return}
+  S.escal.push(id);
+  const good=id==="cbyrne";S.cred=Math.max(0,Math.min(100,S.cred+(good?12:-5)));
+  const msg=good?"Great catch, and the right call. IT disabled the account within ten minutes. Security checked his 2 Oct session: he changed the bank details for a supplier, Harbour Print Ltd, and the next payment run was due Thursday. You may have just stopped a €48,000 fraud. Keep it in your report as Critical.":"Thanks for flagging, but this isn't an active security incident. If it breaks policy, put it in the report. Escalations pull Security off other work.";
+  $("modal").innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ah"><div class="who">${AOIFE_FACE()}<div><b id="ah">Aoife Brennan</b><div class="small muted">GRC Manager</div></div></div><p>${msg}</p><div class="row"><button class="btn primary" data-act="close">Back to the case</button></div></div></div>`;
+  render();
+}
+
+/* ---------- Debrief ---------- */
+const RECS={
+ leaver_active:"Disable the account now and review all activity since the leaving date. Make sure HR's leaver notices reach IT so accounts are disabled on the last day.",
+ late_removal:"Confirm the account is disabled. Make sure HR's leaver notices reach IT so accounts are disabled on the last day.",
+ mover:"Remove the access no longer needed for the new role. Add an access review step to the role-change process.",
+ sod:"Remove one of the conflicting roles. If both are genuinely needed, get a written, approved exception and an independent review of this person's transactions.",
+ dormant:"Disable the account. Run a regular check for accounts unused for 90 days.",
+ generic:"Disable the shared account and give each person who used it their own named account.",
+ no_request:"Raise an access request for retrospective approval, or remove the access.",
+ excess:"Remove the access that wasn't approved, and check that provisioning always matches the ticket.",
+ not_in_matrix:"Remove roles not allowed for the person's job, or update the role matrix if the job genuinely needs them."
+};
+function reportRows(){
+  return Object.entries(S.dec).filter(([k,d])=>d.t==="flag").sort((a,b)=>SEVS.indexOf(b[1].sev)-SEVS.indexOf(a[1].sev))
+    .map(([k,d])=>({name:U[k][0],id:k,issue:ISSUES[d.issue],rule:d.cl.map(c=>`${c} ${CLAUSES[c]}`).join(", "),sev:d.sev,rec:RECS[d.issue]||""}));
+}
+function reportText(){
+  const rows=reportRows(),gaps=Object.entries(S.dec).filter(([k,d])=>d.t==="gap");
+  const L=["LedgerPoint user access review, Q3 2026","Northbay Payments","Prepared by: Junior GRC Analyst","Scope: all LedgerPoint accounts, 1 July to 30 September 2026, tested against the Access Control Policy v3.2","",`Findings (${rows.length})`,""];
+  rows.forEach((r,i)=>L.push(`${i+1}. ${r.issue}: ${r.name} (${r.id})`,`   Rule broken: ${r.rule}`,`   Severity: ${r.sev}`,`   Recommendation: ${r.rec}`,""));
+  if(S.escal.length)L.push("Escalated during the review",...S.escal.map(k=>`- ${U[k][0]} (${k})`),"");
+  if(gaps.length)L.push("Possible gaps in the policy",...gaps.map(([k])=>`- ${U[k][0]} (${k}): risk not covered by the current policy`),"");
+  return L.join("\n");
+}
+function debrief(){
+  let got=0,max=0;const res=[],fps=[];let sevHi=0,sevLo=0,clBad=0;
+  for(const[k,t]of Object.entries(TRUTH)){
+    const b=PTS[t.sev];max+=b+10;const d=S.dec[k];
+    if(!d||d.t!=="flag"){res.push({k,t,s:"miss"});continue}
+    let p=t.ok.includes(d.issue)?b:Math.round(b/2);const clOk=d.cl.some(c=>t.cl.includes(c));if(clOk)p+=5;else clBad++;
+    const diff=SEVS.indexOf(d.sev)-SEVS.indexOf(t.sev),sd=Math.abs(diff);if(diff>0)sevHi++;if(diff<0)sevLo++;
+    p+=sd===0?5:sd===1?2:0;got+=p;
+    const notes=[];if(!t.ok.includes(d.issue))notes.push(`you called it "${ISSUES[d.issue]}"`);if(!clOk)notes.push(`the rule is ${t.cl.join(" or ")}`);if(sd)notes.push(`severity should be ${t.sev}`);
+    res.push({k,t,s:t.ok.includes(d.issue)&&clOk?"hit":"part",notes});
+  }
+  for(const[k,d]of Object.entries(S.dec))if(d.t==="flag"&&!TRUTH[k]){fps.push(k);got-=10}
+  max+=25;if(S.escal.includes("cbyrne"))got+=25;
+  const badEsc=S.escal.filter(k=>k!=="cbyrne");got-=5*badEsc.length;
+  /* Professional skills: scored separately from the technical score */
+  const PROF={ask:[2,"Asked Sinéad for the written approval. Evidence first, and the relationship stays intact."],escalate:[1,"Kept the finding, but passed it to Aoife instead of asking Sinéad for the evidence yourself."],drop:[0,"Removed the finding to keep the peace. With no written sign-off, the policy was still broken."]};
+  const profItems=[];
+  if(PROF[S.push])profItems.push({title:"Sinéad's pushback on Mark Doherty",pts:PROF[S.push][0],max:2,note:PROF[S.push][1]});
+  const profGot=profItems.reduce((a,b)=>a+b.pts,0),profMax=profItems.reduce((a,b)=>a+b.max,0);
+  const profLabel=!profMax?"Not tested":profGot===profMax?"Strong":profGot>0?"Getting there":"Needs work";
+  max+=10;const fk=S.dec.fkerr,gapOk=fk&&fk.t==="gap";if(gapOk)got+=10;
+  const badGaps=Object.entries(S.dec).filter(([k,d])=>d.t==="gap"&&k!=="fkerr").map(([k])=>k);got-=5*badGaps.length;
+  got=Math.max(0,got);const pct=Math.round(got/max*100);
+  const grade=pct>=85?"Ready for promotion":pct>=65?"Solid analyst work":pct>=40?"Needs another pass":"Back to basics";
+  const found=res.filter(r=>r.s!=="miss").length,escOk=S.escal.includes("cbyrne");
+  const names=a=>a.length<3?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+
+  /* Aoife's message */
+  const open=pct>=85?"Really good work on your first review.":pct>=65?"Solid first review.":pct>=40?"A decent start, but there's more to tighten up.":"Thanks for this. It needs another pass before it goes to the audit committee.";
+  const esc1=escOk?"Escalating Ciarán Byrne straight away was the right call. That was the one that mattered most.":"The big one: Ciarán Byrne used his account after he left. That needed to come to me straight away, not just go in the report.";
+  const sum=`You found ${found} of 7 findings${fps.length?` and raised ${fps.length} on account${fps.length>1?"s":""} that met the policy`:", with no false alarms"}.`;
+
+  /* what to work on */
+  const pri=[];
+  if(!escOk)pri.push(["Escalate live security issues straight away","Ciarán Byrne logged in five weeks after leaving, with access to change supplier bank details. Harm could be happening now, so tell your manager immediately, then put it in the report.","judgement"]);
+  if(S.push==="drop")pri.push(["Hold firm when there's no evidence","You removed Mark Doherty's finding after Sinéad pushed back. There was no written sign-off, so the policy was still broken. Ask for the evidence before dropping a finding.","judgement"]);
+  const missBy={};res.filter(r=>r.s==="miss"&&!(r.k==="mdoherty"&&S.push==="drop")).forEach(r=>{(missBy[REVIEW[r.k]]=missBy[REVIEW[r.k]]||[]).push(U[r.k][0])});
+  Object.entries(missBy).sort((a,b)=>b[1].length-a[1].length).forEach(([card,n])=>pri.push([`Missed ${n.length===1?"a finding":n.length+" findings"}: ${BRIEF[cardIdx(card)].title.toLowerCase()}`,`Look again at ${names(n)}. ${n.length===1?"It breaks":"Each one breaks"} a rule in the policy.`,card]));
+  if(fps.length)pri.push(["Check the whole rule before raising a finding",`${names(fps.map(k=>U[k][0]))} met the policy. Not everything that looks wrong is wrong, and false alarms cost you credibility with the business.`,REVIEW[fps[0]]]);
+  if(sevHi+sevLo>=2)pri.push([sevHi>=sevLo?"You tend to rate severity too high":"You tend to rate severity too low",`${sevHi+sevLo} of your findings had the wrong severity. Ask two questions: what harm could this access do, and is it being used?`,"severity"]);
+  if(clBad>=2)pri.push(["Match each finding to the right rule",`${clBad} findings quoted a rule that doesn't fit. Check the policy wording before you choose.`,"policy"]);
+  if(!gapOk)pri.push(["Look for gaps, not just breaches","Fiona Kerr's access has no end date, and contractors aren't on HR's leavers list. No rule was broken, but nothing would ever remove her access. That's worth raising as a gap in the policy.","policy"]);
+  if(badEsc.length)pri.push(["Save escalations for live issues",`${names(badEsc.map(k=>U[k][0]))} didn't need escalating. Put policy breaches in the report.`,"judgement"]);
+  const top=pri.slice(0,3);
+
+  /* what went well */
+  const good=[];
+  if(escOk)good.push("Escalated the live security issue straight away");
+  if(found>=5)good.push(`Found ${found} of the 7 findings`);
+  if(!fps.length&&found>0)good.push("No false alarms: every finding you raised was a real breach");
+  if(S.push==="ask")good.push("Handled Sinéad's pushback by asking for evidence");
+  if(gapOk)good.push("Spotted the gap in the policy on contractor end dates");
+  if(found>0&&sevHi+sevLo===0)good.push("Every severity rating was right");
+
+  const rows=reportRows();
+  const rowHTML=rows.map(r=>`<tr><td><b>${esc(r.name)}</b><br><span class="small muted mono">${esc(r.id)}</span></td><td>${esc(r.issue)}</td><td class="m" style="white-space:normal">${esc(r.rule)}</td><td>${esc(r.sev)}</td><td class="small">${esc(r.rec)}</td></tr>`).join("");
+
+  /* full breakdown (unchanged detail) */
+  const item=r=>`<div class="item ${r.s}"><span class="tag">${r.s==="hit"?"Found":r.s==="part"?"Partly right":"Missed"} · ${r.t.sev}</span><b>${esc(U[r.k][0])}: ${esc(r.t.title)}</b><span class="small muted">${esc(r.t.why)}</span>${r.notes&&r.notes.length?`<span class="small" style="color:var(--amber)">Note: ${r.notes.join("; ")}.</span>`:""}${r.s!=="hit"?`<button class="btn" style="justify-self:start;margin-top:4px" data-review="${REVIEW[r.k]}">Review: ${esc(BRIEF[cardIdx(REVIEW[r.k])].title)}</button>`:""}</div>`;
+  const nextBtn=`<button class="btn primary" data-act="restart">Play again</button>`;
+
+  $("app").innerHTML=`<div class="sheet" style="max-width:880px">
+   <div class="who">${AOIFE_FACE()}<div><b>Debrief from Aoife</b><div class="small muted">LedgerPoint Q3 access review</div></div></div>
+   <div class="db-msg"><p>${open} ${esc1}</p><p>${sum}${top.length?" Here's what I'd work on next.":" Great work."}</p></div>
+
+   <div class="score">
+    <div><span class="small muted">Technical</span><b>${pct}%</b><span class="small" style="font-family:var(--hand);color:var(--red)">${grade}</span><span class="small muted" style="display:block">Findings, rules, severity, escalation, policy gaps</span></div>
+    <div><span class="small muted">Professional skills</span><b>${profMax?`${profGot}/${profMax}`:"–"}</b><span class="small" style="font-family:var(--hand);color:var(--accent)">${profLabel}</span><span class="small muted" style="display:block">How you handled the people side</span></div>
+   </div>
+   <div class="res"><h3>Professional skills</h3>
+    ${profItems.length?profItems.map(p=>`<div class="item ${p.pts===p.max?"hit":p.pts>0?"part":"miss"}"><span class="tag">${p.pts}/${p.max}</span><b>${esc(p.title)}</b><span class="small muted">${esc(p.note)}</span></div>`).join(""):`<p class="small muted" style="margin:0">Not tested this time. You didn't flag Mark Doherty, so Sinéad never pushed back. Replay and raise his finding to face her.</p>`}
+   </div>
+
+   ${top.length?`<div class="res"><h3>What to work on</h3><ol class="db-list">${top.map(p=>`<li><b>${p[0]}</b><span class="small muted">${p[1]}</span><button class="btn" style="justify-self:start" data-review="${p[2]}">Review: ${esc(BRIEF[cardIdx(p[2])].title)}</button></li>`).join("")}</ol></div>`:""}
+   ${good.length?`<div class="res"><h3>What you did well</h3><ul class="db-good">${good.slice(0,3).map(g=>`<li>${g}</li>`).join("")}</ul></div>`:""}
+
+   <div class="res"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px"><h3>Your findings report</h3><button class="btn" data-act="copyreport">Copy report</button></div>
+    <p class="small muted" style="margin:0">This is the report you submitted. Copy it into a document for your portfolio. It shows employers you can carry out an access review.</p>
+    ${rows.length?`<div style="overflow-x:auto"><table class="db-report"><thead><tr><th>Account</th><th>Issue</th><th>Rule broken</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>${rowHTML}</tbody></table></div>`:`<p class="small muted" style="margin:0">You didn't raise any findings.</p>`}
+   </div>
+
+   <details class="db-more"><summary>Full case-by-case breakdown</summary>
+    <div class="res"><p class="small muted" style="margin:0">Technical score ${pct}% ·<span style="font-family:var(--hand);color:var(--red)">${grade}</span></p>
+     <h3>Findings</h3>${res.map(item).join("")}
+     ${fps.length?`<h3>False alarms</h3>${fps.map(k=>`<div class="item miss"><b>${esc(U[k][0])}</b><span class="small muted">${esc(FINE[k])}</span><button class="btn" style="justify-self:start;margin-top:4px" data-review="${REVIEW[k]}">Review: ${esc(BRIEF[cardIdx(REVIEW[k])].title)}</button></div>`).join("")}`:""}
+     ${badGaps.length?`<h3>Not policy gaps</h3>${badGaps.map(k=>`<div class="item miss"><b>${esc(U[k][0])}</b><span class="small muted">${TRUTH[k]?`The policy does cover this. It's a finding: ${esc(TRUTH[k].title)}.`:esc(FINE[k])}</span></div>`).join("")}`:""}
+     <h3>Correctly cleared</h3><p class="small muted" style="margin:0">${Object.keys(FINE).filter(k=>k!=="fkerr"&&S.dec[k]&&S.dec[k].t==="ok").map(k=>esc(U[k][0])).join(", ")||"None"}</p>
+    </div></details>
+
+   <div class="res"><h3>What's next</h3><p style="margin:0">Next, <a href='job01-stage2.html' target='_blank' rel='noopener'><b>Stage 2: write the report</b></a> for these findings.</p><p class="small muted" style="margin:0">Want to go further on privileged access? <a href='job03-stage1.html' target='_blank' rel='noopener'>Job 03: Privileged access review</a> looks at admin access in Microsoft Entra.</p>
+    <div class="row" style="justify-content:flex-start">${nextBtn}<button class="btn" data-act="review">Back to the cases</button></div></div>
+  </div>`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act],[data-stamp],[data-go],[data-rtab],[data-push],[data-ans],[data-bgo],[data-review],[data-mode]");if(!t)return;const d=t.dataset;
+  if(d.ans!=null){S.bAns[S.b]=+d.ans;render();return}
+  if(d.bgo!=null){S.b=+d.bgo;render();window.scrollTo({top:0});return}
+  if(d.mode){S.mode=d.mode;save();renderStats();return}
+  if(d.review){S.ret=S.stage==="cases"?"cases":"debrief";S.b=cardIdx(d.review);S.stage="brief";render();window.scrollTo({top:0});return}
+  if(d.stamp){stamp(d.stamp);return}
+  if(d.go){S.i=+d.go;FLAGOPEN=false;render();return}
+  if(d.rtab){S.rtab=d.rtab;save();const r=document.querySelector(".rules");if(r){r.innerHTML=rulebook();if(window.innerWidth<900)r.scrollIntoView({behavior:"smooth"})}else render();return}
+  if(d.push){answerPush(d.push);return}
+  const a=d.act;
+  if(a==="start"||a==="skipbrief"||a==="startjob"){S.stage="cases";S.ret=null;render();window.scrollTo({top:0});return}
+  if(a==="beginbrief"){S.stage="brief";S.b=0;S.ret=null;render();return}
+  if(a==="openbrief"){S.stage="brief";S.ret="cases";render();window.scrollTo({top:0});return}
+  if(a==="bnext"){S.b=Math.min(BRIEF.length-1,S.b+1);render();window.scrollTo({top:0});return}
+  if(a==="bprev"){S.b=Math.max(0,S.b-1);render();window.scrollTo({top:0});return}
+  if(a==="todebrief"){S.stage="debrief";S.ret=null;render();window.scrollTo({top:0});return}
+  if(a==="tocases"){S.stage="cases";S.ret=null;render();return}
+  if(a==="openflag"){FLAGOPEN=true;$("tray").innerHTML=tray(ORDER[S.i],S.dec[ORDER[S.i]]);const f=document.querySelector('input[name="issue"]');f&&f.focus();return}
+  if(a==="cancelflag"){FLAGOPEN=false;$("tray").innerHTML=tray(ORDER[S.i],S.dec[ORDER[S.i]]);return}
+  if(a==="prev"){S.i=Math.max(0,S.i-1);FLAGOPEN=false;render();return}
+  if(a==="next"){S.i=Math.min(ORDER.length-1,S.i+1);FLAGOPEN=false;render();return}
+  if(a==="escalate"){openEscalate();return}
+  if(a==="sendesc"){sendEsc();return}
+  if(a==="close"){if(e.target===t||t.tagName==="BUTTON")$("modal").innerHTML="";return}
+  if(a==="nextopen"){const nx=ORDER.findIndex((k,n)=>n>S.i&&!S.dec[k]),any=ORDER.findIndex(k=>!S.dec[k]);const to=nx>=0?nx:any;if(to>=0)S.i=to;render();window.scrollTo({top:0});return}
+  if(a==="closepush"){$("modal").innerHTML="";if(S.mode==="training"){render();return}const nx=ORDER.findIndex(k=>!S.dec[k]);if(nx>=0)S.i=nx;render();return}
+  if(a==="replayjob"){S=fresh();S.mode="job";S.stage="cases";FLAGOPEN=false;try{localStorage.removeItem(KEY)}catch(err){}render();window.scrollTo({top:0});return}
+  if(a==="copyreport"){const txt=reportText();const fb=()=>{$("modal").innerHTML=`<div class="scrim" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ch"><h2 id="ch">Your report</h2><p class="small muted">Select all the text and copy it.</p><textarea id="ct" style="min-height:260px;font-family:var(--mono);font-size:12px" readonly>${esc(txt)}</textarea><div class="row"><button class="btn" data-act="close">Close</button></div></div></div>`;const ta=$("ct");ta.focus();ta.select()};
+    try{navigator.clipboard.writeText(txt).then(()=>toast("Report copied. Paste it into a document."),fb)}catch(err){fb()}return}
+  if(a==="finish"){S.stage="debrief";render();window.scrollTo({top:0});return}
+  if(a==="review"){S.stage="cases";render();return}
+  if(a==="restart"){if(t.dataset.sure){S=fresh();FLAGOPEN=false;try{localStorage.removeItem(KEY)}catch(err){}$("modal").innerHTML="";render();return}
+    t.dataset.sure="1";const old=t.textContent;t.textContent="Click again to restart";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent=old}},3000);return}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("modal").innerHTML&&S.push!=="open")$("modal").innerHTML=""});
+if(S.push==="open")pushback();
+render();
+</script>
+
+<style>.av-art{overflow:hidden;padding:0}.av-art svg{width:100%;height:100%;display:block}.who .av-art{flex-basis:44px;width:44px;height:44px}</style>
+<script>
+/* Cast illustrations: swap initials avatars for drawn faces */
+(()=>{const CAST={"SW": ["Sinéad Walsh", "138 76 124 124", "#e3efe7", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#e3efe7\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M100 152 L108 176 L86 160 Z\" fill=\"#fff\"/><circle cx=\"78\" cy=\"126\" r=\"34\" fill=\"#fff\"/><circle cx=\"78\" cy=\"126\" r=\"20\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"5\"/><path d=\"M78 114 L78 126 L88 132\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"166\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><rect x=\"204\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><ellipse cx=\"176\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#1b2a4a\"/><ellipse cx=\"226\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#1b2a4a\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#d99a72\"/><path d=\"M146 228 Q200 204 254 228 L264 338 Q200 352 136 338 Z\" fill=\"#3d8a68\"/><path d=\"M186 212 L200 250 L214 212 Z\" fill=\"#f4efe6\"/><path d=\"M186 212 L200 250 L178 240 L170 220 Z\" fill=\"#2f6e52\"/><path d=\"M214 212 L200 250 L222 240 L230 220 Z\" fill=\"#2f6e52\"/><path d=\"M190 216 Q200 232 210 216\" fill=\"none\" stroke=\"#e7b54a\" stroke-width=\"2.5\"/><circle cx=\"200\" cy=\"228\" r=\"3.5\" fill=\"#e7b54a\"/><path d=\"M150 240 Q132 290 160 300 L236 296\" fill=\"none\" stroke=\"#3d8a68\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M250 240 Q268 288 240 300 L170 304\" fill=\"none\" stroke=\"#2f6e52\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"238\" cy=\"290\" r=\"12\" fill=\"#f0b993\"/><circle cx=\"164\" cy=\"306\" r=\"12\" fill=\"#f0b993\"/><rect x=\"226\" y=\"268\" width=\"18\" height=\"30\" rx=\"4\" fill=\"#1b2a4a\" transform=\"rotate(14 235 283)\"/><rect x=\"229\" y=\"272\" width=\"12\" height=\"20\" rx=\"2\" fill=\"#7fc4d9\" transform=\"rotate(14 235 283)\"/><path d=\"M138 140 Q138 78 200 76 Q262 78 262 140 L264 190 Q246 198 236 186 L164 186 Q154 198 136 190 Z\" fill=\"#2a1f1c\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#f0b993\"/><circle cx=\"146\" cy=\"148\" r=\"9\" fill=\"#f0b993\"/><circle cx=\"254\" cy=\"148\" r=\"9\" fill=\"#f0b993\"/><circle cx=\"146\" cy=\"160\" r=\"4\" fill=\"#e7b54a\"/><circle cx=\"254\" cy=\"160\" r=\"4\" fill=\"#e7b54a\"/><path d=\"M144 146 Q140 84 200 80 Q258 82 258 134 Q250 116 236 108 Q206 92 172 112 Q154 124 150 152 Z\" fill=\"#2a1f1c\"/><path d=\"M258 134 Q262 168 252 190 L246 150 Z\" fill=\"#2a1f1c\"/><circle cx=\"172\" cy=\"164\" r=\"8\" fill=\"#e98b7f\" opacity=\".6\"/><circle cx=\"228\" cy=\"164\" r=\"8\" fill=\"#e98b7f\" opacity=\".6\"/><path d=\"M174 132 L192 134\" stroke=\"#2a1f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M208 130 Q218 122 228 128\" fill=\"none\" stroke=\"#2a1f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"184\" cy=\"147\" r=\"4.5\" fill=\"#1b2a4a\"/><circle cx=\"217\" cy=\"146\" r=\"4.5\" fill=\"#1b2a4a\"/><path d=\"M190 172 Q200 170 212 168\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3\" stroke-linecap=\"round\"/>"], "DM": ["Declan Moran", "138 74 124 124", "#f1e6d6", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#f1e6d6\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M300 152 L292 176 L314 160 Z\" fill=\"#fff\"/><circle cx=\"322\" cy=\"126\" r=\"34\" fill=\"#fff\"/><g transform=\"rotate(-45 322 126)\"><rect x=\"317\" y=\"112\" width=\"10\" height=\"34\" rx=\"4\" fill=\"#5c6670\"/><path d=\"M308 110 a14 14 0 1 0 28 0 l-8 0 l0 8 l-12 0 l0 -8 Z\" fill=\"#5c6670\"/></g><rect x=\"164\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#3b5a86\"/><rect x=\"204\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#3b5a86\"/><ellipse cx=\"174\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#fff\" stroke=\"#c9ced6\" stroke-width=\"2\"/><ellipse cx=\"228\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#fff\" stroke=\"#c9ced6\" stroke-width=\"2\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#e6a983\"/><path d=\"M146 228 Q200 206 254 228 L264 340 Q200 352 136 340 Z\" fill=\"#9a6b2f\"/><path d=\"M170 214 Q200 240 230 214 Q214 228 200 230 Q186 228 170 214 Z\" fill=\"#7d5624\"/><line x1=\"192\" y1=\"230\" x2=\"190\" y2=\"262\" stroke=\"#f1e6d6\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"208\" y1=\"230\" x2=\"210\" y2=\"262\" stroke=\"#f1e6d6\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M168 300 L232 300 L226 330 L174 330 Z\" fill=\"#7d5624\"/><rect x=\"214\" y=\"268\" width=\"20\" height=\"24\" rx=\"3\" fill=\"#fff\"/><rect x=\"214\" y=\"268\" width=\"20\" height=\"7\" rx=\"2\" fill=\"#25b3a8\"/><rect x=\"104\" y=\"262\" width=\"62\" height=\"44\" rx=\"5\" fill=\"#9aa6b2\" transform=\"rotate(-12 135 284)\"/><circle cx=\"134\" cy=\"284\" r=\"5\" fill=\"#d6dbe1\" transform=\"rotate(-12 135 284)\"/><path d=\"M152 236 L144 292\" fill=\"none\" stroke=\"#9a6b2f\" stroke-width=\"26\" stroke-linecap=\"round\"/><circle cx=\"146\" cy=\"300\" r=\"13\" fill=\"#f2bd98\"/><path d=\"M248 236 L282 276 L290 226\" fill=\"none\" stroke=\"#9a6b2f\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"278\" y=\"204\" width=\"24\" height=\"22\" rx=\"8\" fill=\"#f2bd98\"/><rect x=\"283\" y=\"184\" width=\"10\" height=\"26\" rx=\"5\" fill=\"#f2bd98\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#f2bd98\"/><circle cx=\"146\" cy=\"146\" r=\"9\" fill=\"#f2bd98\"/><circle cx=\"254\" cy=\"146\" r=\"9\" fill=\"#f2bd98\"/><path d=\"M148 128 Q144 82 196 80 Q252 78 254 126 L246 112 L238 120 L230 104 L218 114 L208 98 L196 112 L184 98 L174 114 L164 104 L158 122 Z\" fill=\"#c4622d\"/><path d=\"M152 150 Q156 196 200 196 Q244 196 248 150 Q240 176 200 178 Q160 176 152 150 Z\" fill=\"#c4622d\" opacity=\".55\"/><circle cx=\"170\" cy=\"160\" r=\"8\" fill=\"#ef8f86\" opacity=\".6\"/><circle cx=\"230\" cy=\"160\" r=\"8\" fill=\"#ef8f86\" opacity=\".6\"/><path d=\"M174 130 Q183 124 192 130\" fill=\"none\" stroke=\"#8a3f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M208 130 Q217 124 226 130\" fill=\"none\" stroke=\"#8a3f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"183\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><circle cx=\"217\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><path d=\"M184 164 Q200 182 216 164 Z\" fill=\"#fff\" stroke=\"#1b2a4a\" stroke-width=\"3\" stroke-linejoin=\"round\"/>"], "GR": ["Gavin Ryan", "138 76 124 124", "#ebe4f3", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#ebe4f3\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M100 152 L108 176 L86 160 Z\" fill=\"#fff\"/><circle cx=\"78\" cy=\"126\" r=\"34\" fill=\"#fff\"/><path d=\"M68 116 Q68 104 79 104 Q90 104 90 114 Q90 122 80 126 L79 134\" fill=\"none\" stroke=\"#7a5aa8\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"79\" cy=\"146\" r=\"4\" fill=\"#7a5aa8\"/><rect x=\"164\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#b59a72\"/><rect x=\"204\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#b59a72\"/><ellipse cx=\"174\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#4a2e1d\"/><ellipse cx=\"228\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#4a2e1d\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#a8704c\"/><path d=\"M146 228 Q200 206 254 228 L262 340 Q200 352 138 340 Z\" fill=\"#7a5aa8\"/><path d=\"M180 212 L200 246 L220 212 Z\" fill=\"#fff\"/><path d=\"M180 212 L192 230 L176 226 Z M220 212 L208 230 L224 226 Z\" fill=\"#e6e9ee\"/><path d=\"M196 222 L204 222 L206 246 L200 254 L194 246 Z\" fill=\"#2e3a59\"/><path d=\"M140 330 L260 330\" stroke=\"#654894\" stroke-width=\"10\"/><path d=\"M152 236 L114 262 L96 226\" fill=\"none\" stroke=\"#7a5aa8\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M248 236 L286 262 L304 226\" fill=\"none\" stroke=\"#7a5aa8\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><ellipse cx=\"94\" cy=\"214\" rx=\"15\" ry=\"11\" fill=\"#c58b65\"/><ellipse cx=\"306\" cy=\"214\" rx=\"15\" ry=\"11\" fill=\"#c58b65\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#c58b65\"/><circle cx=\"146\" cy=\"146\" r=\"9\" fill=\"#c58b65\"/><circle cx=\"254\" cy=\"146\" r=\"9\" fill=\"#c58b65\"/><path d=\"M148 132 Q142 82 198 80 Q256 80 254 130 Q246 104 222 100 Q196 98 176 106 Q160 112 154 136 Z\" fill=\"#3a2a22\"/><path d=\"M176 106 Q196 90 230 96\" fill=\"none\" stroke=\"#2a1d17\" stroke-width=\"3\"/><circle cx=\"170\" cy=\"160\" r=\"8\" fill=\"#d9746a\" opacity=\".5\"/><circle cx=\"230\" cy=\"160\" r=\"8\" fill=\"#d9746a\" opacity=\".5\"/><path d=\"M174 126 Q183 118 192 124\" fill=\"none\" stroke=\"#2a1d17\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M208 124 Q217 118 226 126\" fill=\"none\" stroke=\"#2a1d17\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"183\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><circle cx=\"217\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><path d=\"M188 170 Q200 174 212 166\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3\" stroke-linecap=\"round\"/>"], "NO": ["Niamh O'Connor", "134 52 132 132", "#e4e8ee", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#e4e8ee\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M300 152 L292 176 L314 160 Z\" fill=\"#fff\"/><circle cx=\"322\" cy=\"126\" r=\"34\" fill=\"#fff\"/><path d=\"M322 104 L342 112 Q342 138 322 150 Q302 138 302 112 Z\" fill=\"#5d6879\"/><path d=\"M313 126 L320 133 L332 118\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"166\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><rect x=\"204\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><ellipse cx=\"176\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#8a2f3c\"/><ellipse cx=\"226\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#8a2f3c\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#ecc0a4\"/><path d=\"M146 228 Q200 204 254 228 L264 338 Q200 352 136 338 Z\" fill=\"#5d6879\"/><path d=\"M184 212 L200 256 L216 212 Z\" fill=\"#c9d3df\"/><path d=\"M184 212 L200 256 L176 244 L170 220 Z\" fill=\"#4a5363\"/><path d=\"M216 212 L200 256 L224 244 L230 220 Z\" fill=\"#4a5363\"/><circle cx=\"200\" cy=\"290\" r=\"3.5\" fill=\"#2b3340\"/><circle cx=\"200\" cy=\"312\" r=\"3.5\" fill=\"#2b3340\"/><g transform=\"rotate(6 236 290)\"><rect x=\"206\" y=\"250\" width=\"58\" height=\"80\" rx=\"5\" fill=\"#1b2a4a\"/><rect x=\"214\" y=\"262\" width=\"42\" height=\"24\" rx=\"3\" fill=\"#fff\"/><rect x=\"219\" y=\"268\" width=\"30\" height=\"4\" rx=\"2\" fill=\"#1b2a4a\"/><rect x=\"219\" y=\"276\" width=\"20\" height=\"4\" rx=\"2\" fill=\"#9aa6b2\"/></g><path d=\"M250 238 Q266 286 236 300\" fill=\"none\" stroke=\"#5d6879\" stroke-width=\"26\" stroke-linecap=\"round\"/><circle cx=\"232\" cy=\"300\" r=\"12\" fill=\"#f6d0b6\"/><path d=\"M150 238 L140 296\" fill=\"none\" stroke=\"#5d6879\" stroke-width=\"26\" stroke-linecap=\"round\"/><circle cx=\"142\" cy=\"304\" r=\"13\" fill=\"#f6d0b6\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#f6d0b6\"/><circle cx=\"146\" cy=\"146\" r=\"9\" fill=\"#f6d0b6\"/><circle cx=\"254\" cy=\"146\" r=\"9\" fill=\"#f6d0b6\"/><circle cx=\"146\" cy=\"158\" r=\"3.5\" fill=\"#c9d3df\"/><circle cx=\"254\" cy=\"158\" r=\"3.5\" fill=\"#c9d3df\"/><circle cx=\"200\" cy=\"76\" r=\"22\" fill=\"#d8b25e\"/><path d=\"M146 140 Q140 86 200 84 Q260 86 254 140 Q248 108 222 102 Q200 98 180 104 Q152 112 146 140 Z\" fill=\"#e2bf6c\"/><path d=\"M180 104 Q198 96 226 100\" fill=\"none\" stroke=\"#c9a14c\" stroke-width=\"3\"/><circle cx=\"171\" cy=\"161\" r=\"8\" fill=\"#ef9a90\" opacity=\".6\"/><circle cx=\"229\" cy=\"161\" r=\"8\" fill=\"#ef9a90\" opacity=\".6\"/><path d=\"M174 130 Q183 126 192 129\" fill=\"none\" stroke=\"#a07c34\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M208 129 Q217 126 226 130\" fill=\"none\" stroke=\"#a07c34\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M177 145 Q183 140 189 145\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M211 145 Q217 140 223 145\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M190 168 Q200 176 210 168\" fill=\"none\" stroke=\"#b24a52\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>"]};
+const up=()=>document.querySelectorAll(".av:not(.av-art)").forEach(el=>{const c=CAST[el.textContent.trim()];if(!c)return;el.classList.add("av-art");el.style.background=c[2];el.setAttribute("role","img");el.setAttribute("aria-label",c[0]);el.innerHTML=`<svg viewBox="${c[1]}" xmlns="http://www.w3.org/2000/svg">${c[3]}</svg>`});
+up();new MutationObserver(up).observe(document.body,{childList:true,subtree:true});})();
+</script>
+<!--GLOSSARY--><script>
+/* ---------- Glossary: click a dotted term to open its explanation ---------- */
+(function(){
+const G=[
+ ["grc","GRC",/\bGRC\b(?! (Manager|Officer|Analyst))/,"Governance, risk and compliance. The work of making sure an organisation is run properly, understands its risks, and follows the laws, standards and rules that apply to it.","Checking who has access to the finance system, assessing a new supplier, or writing a security policy.","It's the umbrella name for the jobs this game prepares you for."],
+ ["framework","Framework",/\bframeworks?\b/i,"An agreed set of good practices, published by a professional body or standards organisation. Organisations use it as a checklist for doing something properly.","ISO 27001 for information security, ISACA's ITAF for IT audit, the IIA Standards for internal audit.","Frameworks tell you what good looks like. Employers expect you to know the main ones by name."],
+ ["itaf","ISACA ITAF",/\b(ISACA )?ITAF\b/,"ISACA's IT Audit Framework: standards and guidance for people who audit IT systems and controls. ISACA also runs the CISA certification.","How to plan an IT audit, gather evidence from systems, and report the results.","It's the main reference for audits like the access reviews in this game."],
+ ["iia","IIA Standards",/\bIIA( Global Internal Audit)? Standards\b/,"The Global Internal Audit Standards, published by the Institute of Internal Auditors. They set out how internal audit work should be planned, done and reported.","Every finding should state the criteria, condition, cause, effect and recommendation.","The most widely recognised standard for internal audit worldwide."],
+ ["audit","Audit",/\baudits?\b/i,"An independent check of whether something is done the way it should be, based on evidence, against agreed rules.","Testing every finance system account against the access control policy.","Audits give management and regulators confidence that controls actually work."],
+ ["portfolio","Portfolio",/\bportfolio\b/i,"A collection of real work you can show an employer, like a report you wrote or an action plan you agreed.","The findings report you copy at the end of each job.","Hard to get without experience. This game gives you one."],
+ ["accessreview","Access review",/\baccess reviews?\b/i,"A regular check that every account in a system is still needed, was properly approved, and has only the access the person's job requires.","Each quarter, the system owner confirms that everyone with access to the finance system should still have it.","One of the most common controls auditors test, and a typical first task for a junior analyst."],
+ ["rolematrix","Role matrix",/\b(privileged )?role matrix\b/i,"A table, approved by the system owner, listing which roles each job is allowed in a system.","AP Clerk: AP_Clerk role only.","It's how you tell whether someone's access fits their job."],
+ ["sod","Segregation of duties",/\bsegregation of duties\b|\bSoD\b/i,"Splitting a sensitive task so no single person can complete it from start to finish without someone else checking.","The person who creates a payment can't also approve it.","It's one of the most important controls against fraud and errors."],
+ ["leastpriv","Least privilege",/\bleast privilege\b/i,"Giving people only the access their job needs, and nothing more.","A clerk who enters invoices doesn't need the right to release payments.","Less access means less damage if an account is misused or stolen."],
+ ["jml","Joiners, movers and leavers",/\bjoiners?, movers? and leavers?\b|\bleavers?\b|\bmovers?\b/i,"People starting, changing job, or leaving. Each event should trigger an access change: new access for joiners, removal of old access for movers, removal of all access for leavers.","Someone leaves on Friday, so their access must be disabled on or before Friday.","Leaver and mover access left behind is one of the most common audit findings."],
+ ["dormant","Dormant account",/\bdormant\b/i,"An account nobody has used for a long time.","No login for 200 days.","Nobody is watching it, so misuse could go unnoticed."],
+ ["shared","Shared account",/\bshared (or generic )?accounts?\b|\bgeneric accounts?\b/i,"One login used by several people.","A \"Finance Temp\" account used by whoever is covering at month-end.","The system can't tell who actually did what, so actions are hard to trace."],
+ ["policy","Policy",/\bpolic(y|ies)\b/i,"An organisation's written, approved rules for how something must be done. Everyone has to follow it.","The Access Control Policy says leavers' access is removed on or before their last day.","In an audit, the policy is what you measure against."],
+ ["policygap","Policy gap",/\bpolicy gaps?\b|\bgaps? in the policy\b/i,"A real risk that no rule in the policy covers. It isn't a breach, because nothing is broken, but the policy should be improved.","Contractor access with no end date, when the policy doesn't require one.","Reported as an observation, with a recommendation to update the policy."],
+ ["finding","Finding",/\bfindings?\b/i,"Something an audit found that breaks an agreed rule, backed by evidence.","A leaver can still log in, which breaks the rule that access must be removed by their last day.","Findings go in the report, and each one gets an owner, an action and a date."],
+ ["severity","Severity",/\bseverity\b/i,"How serious a finding is: Low, Medium, High or Critical.","A leaver using the account after leaving is Critical. An unused read-only account is Low.","It tells the business what to fix first, and sets the deadline."],
+ ["escalate","Escalate",/\bescalat(e|ed|es|ing|ion|ions)\b/i,"Telling your manager straight away, instead of waiting for the report.","A former employee logged in last week. Tell your manager now.","Only for things that could be causing harm right now."],
+ ["exception","Exception",/\bexceptions?( register)?\b/i,"Formal, written approval to break a rule for a good reason, usually signed by a senior person such as the CISO and recorded in an exceptions register.","Approval for someone to hold two conflicting roles while covering a vacancy, with extra checks.","Without a recorded exception, \"it's always been allowed\" is still a breach."],
+ ["tor","Terms of reference",/\bterms of reference\b/i,"The agreed plan for an audit: objective, scope, criteria, evidence needed, timeline and who's involved.","Agreed with the system owner before testing starts.","It prevents arguments later about what was covered."],
+ ["scope","Scope",/\bscope\b/i,"What an audit covers and what it doesn't: the system, the time period, and anything left out.","LedgerPoint user access, July to September 2026. Service accounts out of scope.","Readers assume anything not mentioned was checked, so scope must be clear."],
+ ["scopelim","Scope limitation",/\bscope limitations?\b/i,"Something the audit should have covered but couldn't, or was asked to leave out.","Login records were only kept for 30 days, so you couldn't check who used their account earlier in the quarter.","It must be stated in the report so nobody assumes that area was checked."],
+ ["criteria","Criteria",/\bcriteria\b/i,"The rules you test against: policies, standards, matrices or laws.","Access Control Policy v3.2 and the role matrix.","No criteria, no finding. Without a rule, it's just an opinion."],
+ ["rootcause","Root cause",/\broot causes?\b/i,"The underlying reason a problem happened, as opposed to the problem itself.","Leavers keep their access because HR's leaver notices don't reach IT.","Fixing the root cause stops the same finding coming back."],
+ ["execsum","Executive summary",/\bexecutive summar(y|ies)\b/i,"A short paragraph at the top of a report for senior readers: what was reviewed, the headline result, the most serious issue and what to do.","The audit committee may read nothing else.","Write it last, in plain language."],
+ ["opinion","Overall opinion",/\boverall opinion\b/i,"A one-line rating of the whole audit, such as Satisfactory, Needs improvement or Unsatisfactory.","Unsatisfactory: one Critical and four High findings.","It's the first thing senior readers look at."],
+ ["wp","Working papers",/\bworking papers?\b/i,"The evidence and notes behind an audit, each with a reference such as WP2.","WP2: the user export, with a note of how it was checked.","Anyone should be able to check a finding by following its working paper reference."],
+ ["mgmtresp","Management response",/\bmanagement responses?\b/i,"The owner's written reply to a finding, in their own words: Agreed, Partly agreed or Not agreed.","\"Agreed. The weekly leaver check will be in place by 3 December.\"","It shows management accepts the finding and commits to fixing it."],
+ ["findingscall","Findings call",/\bfindings call\b|\bclosing meeting\b/i,"A meeting near the end of an audit where the auditor and the owners agree an action, owner and date for each finding.","Held after the draft report has been reviewed.","Its output, the action plan, is what gets followed up."],
+ ["actionplan","Action plan",/\baction (plan|tracker)s?\b/i,"The list of agreed fixes: what will be done, who owns it, by when, and the evidence that will prove it's done.","Set up a weekly check of leavers. Owner: the IT manager. Due: 3 December. Evidence: four weeks of check records.","Audit tracks it and closes each action only after checking the evidence."],
+ ["draft","Draft report",/\bdraft reports?\b/i,"The first version of an audit report, sent to the owners to check facts before it's finalised.","Sent with a cover email asking for comments by a date.","It avoids surprises and catches factual errors."],
+ ["owner","System owner",/\bsystem owners?\b/i,"The senior person ultimately accountable for a system, including who can use it.","The head of Finance owns the finance system and is ultimately accountable for it. If someone needs access, they decide yes or no. IT then sets it up.","They approve access and the role matrix, and own most audit actions for their system."],
+ ["ciso","CISO",/\bCISO\b/,"Chief Information Security Officer: the senior person responsible for information security.","Owns the security policies and approves exceptions.","Usually the policy owner, and a key reader of audit reports."],
+ ["committee","Audit committee",/\baudit committee\b/i,"A group of board members who oversee audit, risk and controls.","Receives the final report through the GRC Manager.","It's the most senior audience for an audit report."],
+ ["observation","Observation",/\bobservations?\b/i,"Something worth reporting that doesn't break a rule, such as a policy gap or an improvement.","No policy requires contractor access to have an end date.","Reported separately from findings, with no severity rating."],
+ ["entra","Microsoft Entra ID",/\b(Microsoft )?Entra( ID)?\b/,"Microsoft's cloud identity system, previously called Azure AD. It controls who can sign in to Microsoft 365 and Azure, and what they can do.","Every Northbay staff account lives in Entra ID.","Whoever controls Entra ID controls access to email, files and cloud systems."],
+ ["pim","PIM",/\bPIM\b|\bPrivileged Identity Management\b/,"Privileged Identity Management: a Microsoft Entra feature that makes admin roles \"just-in-time\". People activate a role only when they need it, for a limited time, with controls like MFA and approval.","An admin activates Global Administrator for two hours, with a justification.","It reduces standing admin access, a favourite target for attackers."],
+ ["priv","Privileged access",/\bprivileged access\b|\badmin roles?\b/i,"Access with elevated rights compared with a standard user account, such as creating, changing or deleting users, permissions, settings and data.","Sys_Admin in LedgerPoint, or Global Administrator in Microsoft Entra.","In the wrong hands it can do serious damage, so it's given out sparingly and checked first in any access review."],
+ ["ga","Global Administrator",/\bGlobal Administrators?\b|\bGlobal Admins?\b/,"The most powerful role in Microsoft Entra ID. It can do anything in the tenant, including give itself any other access.","Changing security settings for the whole company.","Keep holders to a minimum. Microsoft recommends fewer than five."],
+ ["jit","Just-in-time (eligible and active)",/\bjust-in-time\b|\beligible\b/i,"In PIM, an Eligible assignment means the person can switch the role on when they need it, for a limited time. An Active assignment is always on.","Eligible: activate Helpdesk Administrator for 4 hours to fix a password problem.","Always-on admin access is waiting to be stolen. Eligible is the safe default for people."],
+ ["breakglass","Emergency access (break-glass) account",/\bbreak-glass\b|\bemergency access accounts?\b|\bemergency accounts?\b/i,"A spare admin account kept for emergencies, like an outage that locks normal admins out. It has permanent Global Administrator by design.","Protected by a hardware key, alerting Security on every sign-in, tested every 90 days.","Permanent admin looks wrong but is correct here. Test the controls around it instead."],
+ ["sp","Service principal",/\bservice principals?\b/i,"The identity an app uses to sign in and act in Entra ID, like an account for software.","An HR connector that creates staff accounts automatically.","Apps can hold admin roles too, so they need an owner and a review."],
+ ["ticket","Ticket (access request)",/\b(access request )?tickets?\b|\baccess requests?\b/i,"A record in the IT service desk system asking for something to be done, such as giving someone access. An access request ticket shows who asked, which roles they need, who approved it and when IT set it up.","A request for a new starter to get the role for entering invoices, approved by their manager and the system owner, and set up on their first day.","In an access review, the ticket is your evidence that access was approved. Compare it with what the person actually has: no ticket, or more access than the ticket asked for, is a finding."],
+ ["breach","Data breach",/\bdata breach(es)?\b/i,"Personal or confidential data seen, copied, changed or lost by someone who shouldn't have it.","A former employee's account is used to export a list of staff salaries and bank details.","Data protection laws require breaches to be reported. In the EU, under the General Data Protection Regulation (GDPR), a personal data breach usually has to be reported to the regulator within 72 hours, and affected people may need to be told. Most countries have similar laws. Fines and loss of trust can follow."],
+ ["svcacct","Service account",/\bservice accounts?\b/i,"An account used by an application or automated process, not by a person.","svc_bankfeed, which loads bank statements into the finance system every night.","Service accounts are often powerful and rarely watched, and their passwords seldom change. Each one needs a named owner and a regular review."],
+ ["ca","Conditional Access",/\bConditional Access\b/,"Entra rules that decide when sign-in is allowed, such as requiring MFA or blocking unknown countries.","Admins must use MFA from a company device.","Emergency accounts are excluded so they still work if a rule goes wrong."],
+ ["lateral","Lateral movement",/\blateral movement\b/i,"When an attacker uses one account or system they've broken into as a stepping stone to reach others.","Using a stolen admin account for the finance system to get into email and file shares.","It's why one stolen privileged account can become a company-wide breach."],
+ ["mfa","MFA",/\bMFA\b/,"Multi-factor authentication: proving it's you with something more than a password, such as an app prompt or a security key.","A password plus a tap on your phone.","It stops most attacks that use stolen passwords."],
+ ["fido","FIDO2 key",/\bFIDO2\b/,"A physical security key used to sign in. It can't be phished like a password or a text code.","A USB key you touch to sign in.","Recommended for the most powerful accounts."],
+ ["tier0","Tier 0",/\bTier 0\b/,"The most powerful roles, which can take over everything else.","Global Administrator and Privileged Role Administrator.","These get the strictest controls, like approval for every activation."],
+ ["guest","Guest account",/\bguests?( accounts?)?\b/i,"An account in Entra ID for someone outside the company, like a supplier or consultant.","A consultant from Ardmore Advisory signing in with their own email.","Their access should be limited and end with their contract."],
+ ["tenant","Tenant",/\btenant\b/i,"An organisation's own space in Microsoft's cloud, holding its users, settings and data.","Northbay's Microsoft 365 and Azure tenant.","Control of the tenant means control of everything in it."]
+];
+const css=document.createElement("style");
+css.textContent=`.gterm{border-bottom:1.5px dotted var(--accent,#2457a6);cursor:help;text-decoration:none}
+.gterm:hover,.gterm:focus-visible{background:var(--accent-soft,#e8eef8);outline:none;border-radius:3px}
+#gloss{position:fixed;z-index:60;top:0;right:0;height:100%;width:min(380px,100vw);background:var(--panel,#fff);color:var(--ink,#1b2230);border-left:1px solid var(--line,#e1e6ec);box-shadow:-8px 0 24px rgba(0,0,0,.12);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;align-content:start;gap:12px;overflow:auto;transform:translateX(105%);transition:transform .2s ease;visibility:hidden}
+#gloss.open{transform:none;visibility:visible}
+#gloss .gk{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#5d6879)}
+#gloss h2{margin:0;font-size:22px}#gloss p{margin:0;line-height:1.5}
+#gloss .gb{background:var(--accent-soft,#e8eef8);border-radius:8px;padding:10px 12px;display:grid;gap:2px}#gloss .gb b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent,#2457a6)}
+#gloss .gx{justify-self:end;background:none;border:1px solid var(--line,#e1e6ec);border-radius:8px;padding:6px 10px;cursor:pointer;color:inherit;font:inherit;font-size:13px}
+@media (max-width:700px){#gloss{top:auto;bottom:0;height:auto;max-height:75vh;width:100%;border-left:0;border-top:1px solid var(--line,#e1e6ec);border-radius:16px 16px 0 0;transform:translateY(105%)}}
+@media (prefers-reduced-motion:reduce){#gloss{transition:none}}`;
+document.head.appendChild(css);
+const panel=document.createElement("aside");panel.id="gloss";panel.setAttribute("aria-label","Glossary");panel.setAttribute("role","dialog");
+document.body.appendChild(panel);
+const byKey={};G.forEach(g=>byKey[g[0]]=g);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let lastFocus=null;
+function open(k){const g=byKey[k];if(!g)return;lastFocus=document.activeElement;
+  panel.innerHTML=`<button class="gx" data-gclose>Close ✕</button><div class="gk">Glossary</div><h2>${esc(g[1])}</h2><p>${esc(g[3])}</p><div class="gb"><b>Example</b><span>${esc(g[4])}</span></div><div class="gb"><b>Why it matters</b><span>${esc(g[5])}</span></div>`;
+  wrapIn(panel,new Set([k]),true);panel.classList.add("open");panel.querySelector(".gx").focus()}
+function close(){panel.classList.remove("open");if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+document.addEventListener("click",e=>{const t=e.target.closest(".gterm");if(t){e.preventDefault();e.stopPropagation();open(t.dataset.g);return}
+  if(e.target.closest("[data-gclose]")){close();return}
+  if(panel.classList.contains("open")&&!e.target.closest("#gloss"))close()},true);
+document.addEventListener("keydown",e=>{const t=e.target.closest&&e.target.closest(".gterm");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();open(t.dataset.g)}
+  if(e.key==="Escape"&&panel.classList.contains("open")){e.stopPropagation();close()}},true);
+const SKIP="button,a,label,input,textarea,select,option,td,th,code,script,style,.gterm,#gloss,.m,.mono,.role,.dot,.stamp,.modal,.bar,.tag,.kv,.stat,.chips,summary,h1,legend,.eyebrow";
+function wrap(){wrapIn(document.querySelector(".wrap")||document.body,new Set([...document.querySelectorAll(".wrap .gterm,body>.gterm")].map(x=>x.dataset.g)),false)}
+function wrapIn(root,used,inPanel){
+  const skip=inPanel?"button,h2,.gk,.gterm":SKIP;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>!n.nodeValue.trim()||(n.parentElement&&n.parentElement.closest(skip))||(n.parentElement&&n.parentElement.closest("b")&&inPanel)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  for(const node of nodes){
+    let cur=node;
+    while(cur){
+      let best=null;
+      for(const g of G){if(used.has(g[0]))continue;const m=g[2].exec(cur.nodeValue);if(m&&(!best||m.index<best.m.index||(m.index===best.m.index&&m[0].length>best.m[0].length)))best={g,m}}
+      if(!best)break;const g=best.g,m=best.m;
+      const after=cur.splitText(m.index);const rest=after.splitText(m[0].length);
+      const sp=document.createElement("span");sp.className="gterm";sp.dataset.g=g[0];sp.tabIndex=0;sp.setAttribute("role","button");sp.title="What's this?";sp.textContent=after.nodeValue;
+      after.replaceWith(sp);used.add(g[0]);cur=rest;
+    }
+  }
+}
+let timer=null;
+const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>{obs.disconnect();wrap();obs.observe(document.body,{childList:true,subtree:true})},40)});
+wrap();obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script><!--/GLOSSARY-->
+
+</body></html>

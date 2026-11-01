@@ -1,0 +1,481 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LedgerPoint Draft Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Red+Hat+Mono:wght@400;500;600&family=Kalam:wght@700&display=swap">
+<style>
+/* Layout: one case file at a time on the desk (left), the policy rulebook beside it (right), stamp tray under the case */
+:root{
+  --desk:#d9dee5; --paper:#fbfaf6; --paper-line:#e6e2d8; --panel:#ffffff; --ink:#1b2230; --muted:#5d6879; --line:#e1e6ec;
+  --bar:#1d2430; --bar-ink:#e7ebf1; --bar-muted:#9aa6b6;
+  --accent:#2457a6; --accent-soft:#e8eef8; --accent-ink:#ffffff;
+  --red:#c2412d; --red-soft:#fdf1ee; --green:#2f7d55; --green-soft:#e6f3ec; --amber:#a2650b; --amber-soft:#fff3dc;
+  --sans:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --mono:"Red Hat Mono",ui-monospace,monospace; --hand:"Kalam","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{background:var(--bar);color:var(--bar-ink);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:600}
+.brand small,.stat small{display:block;font-size:11px;color:var(--bar-muted)}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+.stat b{font-family:var(--mono);font-weight:500}
+.linkbtn{all:unset;cursor:pointer;font-size:12px;color:var(--bar-muted);text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.dot.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.dot.flag{background:var(--red-soft);color:var(--red);border-color:transparent}
+.dot.gap{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.dot[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink)}
+.dot:focus-visible{outline:2px solid var(--accent)}
+.grid{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.left{flex:999 1 560px;min-width:0;display:grid;gap:14px}
+.rules{flex:1 1 320px;max-width:440px;min-width:0;background:var(--panel);border-radius:12px;overflow:hidden}
+@media (max-width:900px){.rules{max-width:none}}
+/* case file */
+.case{position:relative;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px 14px 14px 14px;padding:20px 22px;display:grid;gap:16px;box-shadow:0 1px 0 var(--paper-line),0 8px 24px #0000000f}
+.case::before{content:"CASE FILE";position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--paper);border:1px solid var(--paper-line);border-bottom:0;border-radius:8px 8px 0 0;padding:3px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.casehead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.casehead h1{font-size:22px;margin:0;font-weight:600;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec{display:grid;gap:8px;border-top:1px dashed var(--paper-line);padding-top:12px}
+.sec h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}
+.kv div{display:grid;gap:1px;min-width:0}
+.kv span{font-size:11px;color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:500;font-size:13px;overflow-wrap:anywhere}
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.role{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.none{font-size:13px;color:var(--muted);font-style:italic}
+.stamp{position:absolute;right:22px;top:22px;font-family:var(--hand);font-size:30px;padding:2px 14px;border:3px solid currentColor;border-radius:8px;transform:rotate(-8deg);pointer-events:none;background:var(--paper)}
+.stamp.ok{color:var(--green)}.stamp.flag{color:var(--red)}.stamp.gap{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thud .25s ease-out}@keyframes thud{from{transform:rotate(-8deg) scale(1.6);opacity:0}}}
+/* tray */
+.tray{background:var(--panel);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.trayrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.big{cursor:pointer;font-family:var(--hand);font-size:22px;padding:8px 22px;border-radius:10px;border:3px solid currentColor;background:transparent}
+.big.ok{color:var(--green)}.big.flag{color:var(--red)}.big.gap{color:var(--amber)}
+.big:hover{background:var(--panel)}
+.btn{cursor:pointer;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.esc{border-color:var(--red);color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:6px}
+legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;background:var(--panel)}
+.chips label:has(input:checked){border-color:var(--red);background:var(--red-soft)}
+.chips input{accent-color:var(--red)}
+.chips.mono label{font-family:var(--mono)}
+.err{color:var(--red);font-size:13px;margin:0}
+/* rulebook */
+.rtabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+.rtab{all:unset;cursor:pointer;flex:1;text-align:center;padding:11px 6px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+.rtab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+.rtab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rbody{padding:14px 16px;display:grid;gap:2px;max-height:72vh;overflow:auto}
+.clause{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.clause b{font-family:var(--mono);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.m{font-family:var(--mono);white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);padding-top:8px}
+/* overlays */
+.scrim{position:fixed;inset:0;background:#0b0f1599;display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--panel);color:var(--ink);border-radius:12px;width:min(540px,100%);max-height:calc(100% - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.modal h2{margin:0;font-size:18px}
+.modal p{margin:0}
+.who{display:flex;gap:10px;align-items:center}
+.av{flex:0 0 34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+/* intro & debrief */
+.sheet{background:var(--paper);border:1px solid var(--paper-line);border-radius:14px;padding:24px;display:grid;gap:14px;max-width:760px}
+.sheet h1{margin:0;font-size:26px;text-wrap:balance}
+.sheet p{margin:0;max-width:65ch}
+.sheet ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.score{display:flex;flex-wrap:wrap;gap:10px}
+.score div{flex:1 1 130px;border:1px solid var(--paper-line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.score b{display:block;font-family:var(--mono);font-size:22px}
+.res{display:grid;gap:8px}
+.res h3{margin:6px 0 0;font-size:15px}
+.item{border-left:3px solid var(--line);padding:5px 0 5px 12px;display:grid;gap:2px}
+.item.hit{border-left-color:var(--green)}.item.part{border-left-color:var(--amber)}.item.miss{border-left-color:var(--red)}
+.tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.hit .tag{color:var(--green)}.part .tag{color:var(--amber)}.miss .tag{color:var(--red)}
+.small{font-size:12.5px}.muted{color:var(--muted)}
+.bigstamp{font-family:var(--hand);font-size:30px;color:var(--red);display:inline-block;border:3px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-4deg)}
+.av-aoife{background:#d7eeec;overflow:hidden;padding:0}.av-aoife svg{width:100%;height:100%;display:block}
+.who .av-aoife{flex-basis:44px;height:44px}
+.aoife-note{display:flex;gap:10px;align-items:flex-start;background:var(--amber-soft);border-radius:10px;padding:10px 12px}
+.aoife-note .av{flex:0 0 38px;height:38px}.aoife-note>div{display:grid;gap:2px;min-width:0}
+.aoife-note .tag{color:var(--amber)}
+.intro-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.intro-top>div{flex:1 1 280px;display:grid;gap:10px}
+.aoife-full{width:150px;height:auto;flex:0 0 auto}
+@media (max-width:520px){.aoife-full{width:110px}}
+.db-msg{display:grid;gap:8px;font-size:15.5px}.db-msg p{margin:0}
+.db-list{margin:0;padding-left:22px;display:grid;gap:14px}.db-list li{display:grid;gap:4px}
+.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.db-report{min-width:640px}.db-report th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line)}
+.db-more{border:1px solid var(--line);border-radius:10px;padding:10px 14px}.db-more summary{cursor:pointer;font-weight:600}.db-more[open] summary{margin-bottom:10px}
+.jobs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:16px}.jobs h3{margin:0 0 4px;font-size:15px}
+.job{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.job>div{display:grid;gap:2px;min-width:0}.job-n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.job-s{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.job.open .job-s{background:var(--green-soft);color:var(--green)}.job.locked{opacity:.75}.job.locked .job-s{background:var(--line);color:var(--muted)}
+@media (max-width:520px){.job{grid-template-columns:1fr}}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--bar);color:var(--bar-ink);padding:10px 14px;border-radius:10px;max-width:340px;font-size:13px}
+.part{border-top:1px solid var(--line);padding-top:12px}.part legend{font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:6px}
+.opts{display:grid;gap:6px}.btn.opt[disabled]{opacity:1;cursor:default;color:var(--muted)}.btn.opt[disabled][aria-pressed="true"]{color:var(--ink)}
+.btn.opt{text-align:left;font-size:13.5px;line-height:1.4;padding:9px 12px}
+.draft{display:grid;gap:8px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}.draft h3{margin:0;font-size:15px}
+.dpart{display:grid;gap:2px;font-size:13.5px}.dpart>b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sev{font-size:11px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}.sev-Critical{background:var(--red);color:#fff}.sev-High{background:var(--red-soft);color:var(--red)}
+.db-list{margin:0;padding-left:22px;display:grid;gap:12px}.db-list li{display:grid;gap:3px}.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.mail{border:1px solid var(--line);border-radius:10px;background:var(--paper);overflow:hidden}.mail-h{overflow-wrap:anywhere;display:grid;gap:3px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel);font-size:13.5px}
+.mail-b{padding:12px 14px;display:grid;gap:8px;font-size:14px}.mail-b p{margin:0}
+.quote{margin:0;padding:12px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:15px}
+.case::before{display:none}.case{margin-top:0}
+.db-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+</style>
+<header class="bar">
+  <div class="brand"><div class="logo">N</div><div><b>Northbay Payments</b><small>LedgerPoint Q3 access review · Job 01 · Stage 3</small></div><a href="index.html" style="margin-left:8px;font-size:12px;color:var(--bar-muted);white-space:nowrap">← Game home</a></div>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+const MIX=a=>{let h=7;const s=a.map(o=>o[0]).join("|");for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;const p=a.map((o,n)=>[o,n]);for(let i=p.length-1;i>0;i--){h=(Math.imul(h,1103515245)+12345)|0;const j=(h>>>8)%(i+1);[p[i],p[j]]=[p[j],p[i]]}return p};
+
+const AOIFE_ART=`<circle cx="200" cy="250" r="185" fill="#d7eeec"/><ellipse cx="200" cy="448" rx="95" ry="12" fill="#1b2a4a" opacity=".15"/><path d="M300 152 L292 176 L314 160 Z" fill="#fff"/><circle cx="322" cy="126" r="34" fill="#fff"/><path d="M306 127 L318 139 L340 112" fill="none" stroke="#2fa37a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><rect x="163" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><rect x="205" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><ellipse cx="174" cy="440" rx="22" ry="10" fill="#7a2e1d"/><ellipse cx="228" cy="440" rx="22" ry="10" fill="#7a2e1d"/><rect x="189" y="182" width="22" height="34" rx="8" fill="#e9b28f"/><path d="M148 228 Q200 204 252 228 L264 338 Q200 352 136 338 Z" fill="#2457a6"/><path d="M184 212 L200 262 L216 212 Z" fill="#fff"/><path d="M184 212 L200 262 L176 244 L170 220 Z" fill="#1c4585"/><path d="M216 212 L200 262 L224 244 L230 220 Z" fill="#1c4585"/><path d="M190 214 L200 268 L210 214" fill="none" stroke="#25b3a8" stroke-width="4"/><rect x="188" y="266" width="24" height="30" rx="3" fill="#fff"/><rect x="188" y="266" width="24" height="8" rx="2" fill="#25b3a8"/><rect x="193" y="280" width="14" height="3" rx="1.5" fill="#1b2a4a"/><rect x="193" y="286" width="10" height="3" rx="1.5" fill="#1b2a4a"/><path d="M248 236 L282 280 L298 222" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><line x1="300" y1="210" x2="312" y2="180" stroke="#1b2a4a" stroke-width="5" stroke-linecap="round"/><circle cx="300" cy="210" r="13" fill="#f6c9a8"/><g transform="rotate(-8 134 300)"><rect x="98" y="252" width="66" height="88" rx="6" fill="#c98a4b"/><rect x="105" y="262" width="52" height="72" rx="3" fill="#fff"/><rect x="118" y="247" width="26" height="12" rx="4" fill="#5c6670"/><path d="M110 276 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="274" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M110 296 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="294" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M111 312 l10 10 M121 312 l-10 10" stroke="#e0533d" stroke-width="3" stroke-linecap="round"/><rect x="128" y="314" width="22" height="4" rx="2" fill="#9aa6b2"/></g><path d="M152 236 L140 296" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round"/><circle cx="142" cy="304" r="13" fill="#f6c9a8"/><rect x="140" y="84" width="120" height="100" rx="40" fill="#a9432a"/><circle cx="200" cy="140" r="54" fill="#f6c9a8"/><circle cx="146" cy="146" r="9" fill="#f6c9a8"/><circle cx="254" cy="146" r="9" fill="#f6c9a8"/><path d="M146 138 Q146 84 200 82 Q256 84 256 136 Q236 106 204 108 Q178 104 162 128 Z" fill="#a9432a"/><circle cx="172" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="228" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="183" cy="145" r="4" fill="#1b2a4a"/><circle cx="217" cy="145" r="4" fill="#1b2a4a"/><circle cx="183" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><circle cx="217" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><line x1="196" y1="145" x2="204" y2="145" stroke="#1b2a4a" stroke-width="3"/><path d="M190 170 Q200 179 210 170" fill="none" stroke="#1b2a4a" stroke-width="3" stroke-linecap="round"/>`;
+const aoifeArt=(vb,cls)=>`<svg class="${cls}" viewBox="${vb}" role="img" aria-label="Aoife Brennan" xmlns="http://www.w3.org/2000/svg">${AOIFE_ART}</svg>`;
+const AOIFE_FULL=()=>aoifeArt("0 30 400 440","aoife-full");
+const AOIFE_FACE=()=>`<span class="av av-aoife">${aoifeArt("138 76 124 124","")}</span>`;
+
+/* ---------- Content ---------- */
+const TRAPS={negotiate:"Don't invite people to negotiate findings",tone:"Keep the tone professional and neutral",vague:"Be clear about what you need and when",scope:"Send it to the right people only",cave:"Don't drop or soften findings without evidence",adversarial:"Stay collaborative, not combative",ignore:"Engage with every comment properly"};
+const TRAPHELP={negotiate:"The draft goes out to check the facts. Asking whether people are \"happy\" with findings invites them to argue them away.",tone:"Don't apologise for doing your job, and don't be casual or alarmist. Neutral and professional earns respect.",vague:"Say exactly what you need back (factual comments, and proposed actions ready for the findings call) and give a clear, reasonable deadline.",scope:"Drafts go to the people who own the findings, with your manager in copy. Not the whole team, not people named in findings, not senior leaders before owners have seen it.",cave:"Facts can be corrected. Findings only change if someone brings new evidence. Being fixed after the review doesn't erase a finding.",adversarial:"Pushback is normal. Escalating or digging in too early damages the relationship you'll need for the follow-up.",ignore:"Every comment deserves a considered reply, even if the answer is no."};
+const EMAIL=[
+ {id:"to",label:"Recipients",q:"Who should the draft go to?",opts:[
+  ["To: Finance team (all staff) · Cc: Aoife Brennan, Méabh Lynch (CFO)",0,"Far too wide. Drafts aren't for general circulation, and the CFO sees the final report, not the first draft.","scope"],
+  ["To: Sinéad Walsh, Declan Moran, Gavin Ryan (HR Operations) · Cc: Aoife Brennan",1,"Right. The owners of the findings (system owner, IT and HR), with your manager in copy.",""],
+  ["To: Méabh Lynch (CFO), Mark Doherty, Emma Coyle · Cc: Aoife Brennan",0,"Mark and Emma are named in findings; their managers respond, not them. And the CFO shouldn't see it before the owners.","scope"]]},
+ {id:"subj",label:"Subject",q:"Subject line",opts:[
+  ["Report",0,"Too vague. People should know what it is and that it's a draft from the subject line alone.","vague"],
+  ["Audit results: urgent issues found!!",0,"Alarmist. It puts people on the defensive before they've opened it.","tone"],
+  ["DRAFT for review: LedgerPoint Q3 2026 user access review",1,"Clear: it's a draft, what it covers, and that it needs review.",""]]},
+ {id:"purpose",label:"Purpose",q:"Opening paragraph",opts:[
+  ["Please find attached the draft report from the LedgerPoint Q3 user access review. Before it's finalised, please check it for factual accuracy and let me know if anything is incorrect or missing context.",1,"States what it is and exactly what you want: a check of the facts.",""],
+  ["Attached is the report. Let me know if you're happy with the findings or if you'd like any of them taken out.",0,"This invites people to negotiate findings away. The draft is for checking facts.","negotiate"],
+  ["Sorry to bother you with this, I know everyone is very busy. I found a few problems, I hope that's OK.",0,"Don't apologise for doing your job. It weakens the findings before anyone reads them.","tone"]]},
+ {id:"ask",label:"What you need back",q:"What you need from them",opts:[
+  ["Please fix all of these issues immediately.",0,"Audit doesn't order fixes. The business agrees actions, owners and dates.","tone"],
+  ["No action is needed from you at this stage.",0,"Wrong. You need their factual comments, and they need to prepare proposed actions for the findings call.","vague"],
+  ["Please also think about the actions you'd propose for each finding and who would own them. We'll agree actions, owners and target dates together on the findings call.",1,"Right. Owners come to the call prepared, so actions can be agreed rather than invented on the spot.",""]]},
+ {id:"deadline",label:"Deadline",q:"Deadline",opts:[
+  ["Whenever you get a chance.",0,"Without a deadline, drafts sit for weeks.","vague"],
+  ["Please send any comments by Friday 30 October, and I'll then set up the findings call. If I don't hear back by then, I'll take the facts as agreed.",1,"A clear, reasonable deadline (two weeks) and what happens if it passes.",""],
+  ["I need this back by end of day today.",0,"Unreasonable. People need time to check facts and agree actions.","tone"]]},
+ {id:"conf",label:"Confidentiality",q:"Handling the draft",opts:[
+  ["Feel free to share this with your teams.",0,"Drafts can contain errors and name people. Keep circulation tight until it's final.","scope"],
+  ["This is a draft for the people on this email only, so please don't forward it.",1,"Right. Drafts stay with the people who need to review them.",""],
+  ["I've also attached my working papers in case they help.",0,"Working papers stay with audit. Share evidence on request, not by default.","scope"]]},
+ {id:"close",label:"Closing",q:"Closing",opts:[
+  ["Any disagreements should be raised with the CISO.",0,"Combative. It signals a fight before anyone has replied.","adversarial"],
+  ["Cheers, chat soon x",0,"Too casual for an audit report.","tone"],
+  ["Happy to set up a call to talk through any of the findings. Thanks for your help during the review.",1,"Collaborative, and offers a conversation.",""]]}
+];
+const COMMENTS=[
+ {id:"c1",from:"Sinéad Walsh",role:"Financial Controller",av:"SW",col:"#3d8a68",ref:"Finding 2: Segregation of duties conflict",
+  text:"This makes it look like Mark did something wrong. Him covering approvals has been agreed for years. Please take this finding out.",
+  opts:[["Remove the finding. Sinéad owns the system and knows the arrangement best.",0,"A verbal agreement isn't a recorded exception, and no new evidence was provided. The finding stands.","cave"],
+   ["Keep the finding, and check the wording is about the access, not about Mark. Reply that a verbal agreement still needs a CISO-approved exception, and suggest she brings that to the findings call as her proposed action.",1,"Right. Neutral wording, finding kept, and you've given her a constructive way forward.",""],
+   ["Reject it and forward her email to the CISO so he knows she's pushing back.",0,"Too combative. Pushback is normal; handle it yourself first.","adversarial"]]},
+ {id:"c2",from:"Declan Moran",role:"IT Systems Administrator",av:"DM",col:"#9a6b2f",ref:"Finding 1: Leaver still active and used after leaving",
+  text:"We disabled Ciarán's account the day you escalated it. It's fixed, so this finding can come out now.",
+  opts:[["Remove it, since the account is now disabled.",0,"The control failed during the quarter, and the cause (no check between HR leavers and LedgerPoint) still isn't fixed. Removing it hides that.","cave"],
+   ["Mark the finding closed today, based on Declan's email.",0,"Never close a finding just because someone says it's fixed. Verify it yourself first, and even then, the cause behind it isn't fixed yet.","cave"],
+   ["Downgrade it to Low because it's been fixed.",0,"Severity reflects what happened and could happen. Fixing one account doesn't change that.","cave"],
+   ["Check LedgerPoint yourself to confirm the account is disabled. Then update the finding in the draft report: \"Account disabled on 12 October 2026, verified by audit.\" Thank Declan, and explain the finding stays open until the cause, the missing check between HR leavers and LedgerPoint, is fixed.",1,"Right. You verified the fix yourself and recorded it in the report. The finding stays open because disabling one account doesn't fix why it was missed: nothing checks HR's leaver list against LedgerPoint, so the next leaver could slip through the same way. Once that check is in place and you've verified it, the finding can be closed.",""]]},
+ {id:"c3",from:"Gavin Ryan",role:"HR Operations Manager",av:"GR",col:"#7a5aa8",ref:"Root cause",
+  text:"HR sends a leaver list to IT every month. I don't accept that HR is part of the problem. Please make the root cause IT only.",
+  opts:[["Ask Gavin for evidence that Ciarán's leaver notice was sent to IT. If he can show it, update the wording to show where it broke down. If not, keep it as it is.",1,"Right. Evidence decides, not whoever pushes hardest. And note: a monthly list can't meet an \"on or before the last day\" rule anyway.",""],
+   ["Change it to an IT issue, as he asked.",0,"You'd be changing a finding without evidence, and possibly blaming the wrong team.","cave"],
+   ["Don't reply. The root cause is your call.",0,"Every comment needs a reply. Ignoring him will make the findings call much harder.","ignore"]]},
+ {id:"c4",from:"Sinéad Walsh",role:"Financial Controller",av:"SW",col:"#3d8a68",ref:"Finding 2, cause: \"…when he began covering the vacant AP Supervisor role in July.\"",
+  text:"Small thing: Mark only started covering when Ciarán left at the end of August, not in July.",
+  opts:[["Reject it. The draft has already gone out.",0,"Drafts exist to catch errors like this. Fix it.","ignore"],
+   ["Check the HR record (Ciarán left on 28 August), then correct the date and thank her.",1,"Right. Verify, correct and thank. Accepting genuine corrections builds trust for when you hold firm.",""],
+   ["Accept it, and remove the whole finding to be safe.",0,"A wrong date doesn't invalidate the finding. Fix the fact, keep the finding.","cave"]]},
+ {id:"c5",from:"Sinéad Walsh",role:"Financial Controller",av:"SW",col:"#3d8a68",ref:"Finding 4: Shared account in use (High)",
+  text:"Can the shared account finding go down to Medium? It was only temps using it at month-end.",
+  opts:[["Agree, to keep the relationship good after pushing back on Finding 2.",0,"Severity isn't a bargaining chip. It reflects the risk.","cave"],
+   ["Explain it stays High: the account can create payment requests and can't easily be traced to a person, and temporary staff don't change that. Offer to look again if she has new evidence.",1,"Right. Explain the reasoning, and stay open to real evidence.",""],
+   ["Raise it to Critical so she stops arguing.",0,"Severity must reflect risk, not the conversation.","adversarial"]]}
+];
+const BRIEF=[
+ {title:"Why the draft goes out first",body:["Before a report is final, the people responsible for the findings see it as a <b>draft</b>.","It lets them correct <b>facts</b> you may have got wrong, add context, and start thinking about what they'll do about each finding, ready to agree actions on the findings call. It also means no one is surprised when the final report reaches senior management."],
+  ex:"The draft review is for checking facts and agreeing actions. It isn't a negotiation over whether findings exist.",
+  q:"What is the main purpose of sending a draft report?",opts:[["To let people remove findings they disagree with",0,"Findings only change if someone brings new evidence. The draft review checks facts. It isn't a negotiation over whether findings exist."],["To check the facts and prepare for agreeing actions, so there are no surprises",1,"Right. Owners check the facts, so errors are caught before senior management sees them. They get time to think about actions before the findings call, and nobody first reads about a problem in their area in the final report. It isn't a chance to argue findings away."],["To show senior management early",0,"Owners see the draft first, so they can correct facts and prepare. Senior management get the final version, once it's agreed."]]},
+ {title:"The cover email",body:["The email sets the rules for the review. A good one covers:","<b>Recipients:</b> the owners of the findings, with your manager in copy.<br><b>Subject:</b> clearly marked DRAFT.<br><b>Purpose:</b> check it for factual accuracy.<br><b>What you need:</b> comments plus factual comments, and to start thinking about actions for the findings call.<br><b>Deadline:</b> clear and reasonable.<br><b>Confidentiality:</b> don't forward the draft.<br><b>Closing:</b> offer a call."],
+  ex:"Never write \"let me know if you're happy with the findings\". It's an invitation to argue them away.",
+  q:"When are actions, owners and dates agreed?",opts:[["In the cover email, before anyone has read the draft",0,"Too early. Owners need time to read and understand the findings before they can commit to realistic actions."],["On the findings call, after owners have reviewed the draft",1,"Right. The draft gives owners time to understand each finding and think about what they'll do. The findings call is where you agree the action, owner and date together, so everyone commits in the same room."],["After the final report is issued",0,"Too late. The final report should include the agreed actions, owners and dates, so they need to be settled before it's issued."]]},
+ {title:"Handling comments",body:["Comments usually fall into three types:","<b>Factual corrections:</b> check them, and if they're right, fix them and say thanks.<br><b>Remediation:</b> verify the fix yourself, then record it with the date. If the whole issue is fixed, mark the finding <b>Closed</b> with its closing date. If only part is fixed (for example the account, but not the process that caused it), the finding stays <b>open</b>. Either way, it stays in the report.<br><b>Pushback:</b> listen first, because you may have misunderstood something. Then ask for evidence. If there's none, the finding stays, and you explain why politely. If they still disagree, their view can be recorded in the report alongside the finding, and your manager can help resolve it."],
+  ex:"Accepting genuine corrections quickly is what earns you the credibility to hold firm when it matters.",
+  q:"A finding's account was fixed after your review. What do you do?",opts:[["Remove the finding",0,"The control still failed during the period you reviewed, and the cause may not be fixed. Removing it hides that from the people who need to know."],["Verify the fix and record the date. Close the finding only if the whole issue, including its cause, is fixed",1,"Right. Check the fix yourself, because someone saying it's fixed isn't evidence. Record the date, so the report shows it was handled. But the control still failed during the review period, and if the cause isn't fixed it will happen again, so the finding stays open until it is."],["Downgrade it to Low",0,"Severity reflects the risk of the control failing, not whether one account has since been fixed. The same failure could happen again tomorrow."]]}
+];
+
+/* ---------- State ---------- */
+const KEY="ledgerpoint-draftreview-v1";
+const fresh=()=>({stage:"intro",mode:"training",b:0,bAns:{},em:{},cm:{},ci:0});
+let S=fresh();
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.em&&s.stage!=="debrief")S=Object.assign(fresh(),s)}catch(e){}
+S.mode="training";
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let tt;const toast=m=>{const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)};
+
+/* ---------- Render ---------- */
+function render(){renderStats();({intro,brief,email,comments,debrief})[S.stage]();save()}
+function renderStats(){
+  $("stats").innerHTML=`<div class="stat"><small>Email</small><b>${Object.keys(S.em).length} / ${EMAIL.length}</b></div><div class="stat"><small>Comments</small><b>${Object.keys(S.cm).length} / ${COMMENTS.length}</b></div><div class="stat"><small>Stage</small><b>3 of 5</b></div><button class="linkbtn" data-act="restart">Restart</button>`;
+}
+function intro(){
+  $("app").innerHTML=`<div class="sheet">
+   <div class="intro-top">${AOIFE_FULL()}<div><div><b>Aoife Brennan</b><div class="small muted">GRC Manager</div></div><h1>Stage 3: Draft report review</h1></div></div>
+   <p>Your draft report is ready. Before it's final, it goes to the people who own the findings for review. That review has three purposes:</p>
+   <ul><li><b>Check the facts.</b> They can correct anything you've got wrong, before it reaches senior management.</li><li><b>Prepare for the findings call.</b> Owners get time to understand each finding and think about what they'll do about it. The actions, owners and dates are then agreed together on the findings call.</li><li><b>No surprises.</b> Nobody should first read about a finding in their area in the final report.</li></ul>
+   <p>It is <b>not</b> a chance to negotiate findings away. Findings only change if someone brings new evidence.</p>
+   <p><b>Part A:</b> write the cover email that goes out with the draft. <b>Part B:</b> five comments come back. Decide how to respond to each one.</p>
+   <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" data-act="beginbrief">Start the briefing</button><button class="btn" data-act="toemail">Skip to the email</button></div>
+   <p class="small muted" style="margin:0">Earlier stages: <a href="job01-stage1.html">Stage 1, the access review</a> · <a href="job01-stage2.html">Stage 2, write the report</a> · <a href="job01.html">All Job 01 stages</a></p></div>`;
+}
+function brief(){
+  const c=BRIEF[S.b],ans=S.bAns[S.b],done=ans!=null&&c.opts[ans][1],last=S.b===BRIEF.length-1;
+  $("app").innerHTML=`<div class="queue">${BRIEF.map((x,n)=>`<button class="dot ${S.bAns[n]!=null&&BRIEF[n].opts[S.bAns[n]][1]?"ok":""}" data-bgo="${n}" aria-current="${n===S.b}" aria-label="${esc(x.title)}">${n+1}</button>`).join("")}<span style="flex:1"></span><button class="btn" data-act="toemail">Skip to the email</button></div>
+  <div class="sheet"><div class="eyebrow">Briefing ${S.b+1} of ${BRIEF.length}</div><h1>${c.title}</h1>${c.body.map(p=>`<p>${p}</p>`).join("")}
+   <div class="aoife-note">${AOIFE_FACE()}<div><span class="tag">From Aoife</span><span>${c.ex}</span></div></div>
+   <fieldset style="gap:8px"><legend style="font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600">${c.q}</legend>
+    ${MIX(c.opts).map(([o,n])=>{const pk=ans===n,st=pk?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"";return`<button class="btn" style="text-align:left;${st}" data-ans="${n}" ${done?"disabled":""}>${o[0]}</button>`}).join("")}</fieldset>
+   ${ans!=null?`<p class="small" style="margin:0;color:${c.opts[ans][1]?"var(--green)":"var(--red)"}"><b>${c.opts[ans][1]?"Correct.":"Not quite."}</b> ${c.opts[ans][2]}${c.opts[ans][1]?"":" Try again."}</p>`:""}
+   <div class="row" style="justify-content:space-between"><button class="btn" data-act="bprev" ${S.b===0?"disabled":""}>Previous</button><button class="btn primary" data-act="${last?"toemail":"bnext"}" ${done?"":"disabled"}>${last?"Write the email":"Next card"}</button></div></div>`;
+}
+function optBlock(list,store,id,q){
+  const a=store[id],lock=S.mode==="training"&&a!=null;
+  const opts=MIX(list).map(([o,n])=>{let st="";if(a===n)st=S.mode==="training"?(o[1]?"background:var(--green-soft);border-color:var(--green)":"background:var(--red-soft);border-color:var(--red)"):"background:var(--accent-soft);border-color:var(--accent)";
+    return`<button class="btn opt" style="${st}" data-pick="${store===S.em?"em":"cm"}|${id}|${n}" ${lock?"disabled":""} aria-pressed="${a===n}">${esc(o[0])}</button>`}).join("");
+  const fb=S.mode==="training"&&a!=null?`<p class="small" style="margin:0;color:${list[a][1]?"var(--green)":"var(--red)"}"><b>${list[a][1]?"Good choice.":"Not the best."}</b> ${esc(list[a][2])}</p>`:"";
+  return`<fieldset class="part"><legend><b>${esc(q)}</b></legend><div class="opts">${opts}</div>${fb}</fieldset>`;
+}
+const pickTxt=(sec)=>{const a=S.em[sec.id];return a!=null?sec.opts[a][0]:null};
+function emailPreview(){
+  const g=id=>pickTxt(EMAIL.find(e=>e.id===id));
+  const to=g("to"),ph=t=>`<span class="muted small">[${t}]</span>`;
+  const [toL,ccL]=to?to.split(" · "):[null,null];
+  return`<div class="mail"><div class="mail-h"><div><b>${toL?esc(toL):ph("To")}</b></div><div class="small">${ccL?esc(ccL):ph("Cc")}</div><div class="small">Attachment: LedgerPoint_Q3_2026_Access_Review_DRAFT_v0.1.pdf</div><div><b>Subject:</b> ${g("subj")?esc(g("subj")):ph("Subject")}</div></div>
+   <div class="mail-b"><p>Hi all,</p>${["purpose","ask","deadline","conf","close"].map(k=>`<p>${g(k)?esc(g(k)):ph(EMAIL.find(e=>e.id===k).label)}</p>`).join("")}<p>Kind regards,<br>Junior GRC Analyst<br>Northbay Payments</p></div></div>`;
+}
+function email(){
+  const all=EMAIL.every(e=>S.em[e.id]!=null);
+  $("app").innerHTML=`<div class="grid"><div class="left">
+   <article class="case"><div class="casehead"><div><div class="eyebrow">Part A · Cover email</div><h1>Send the draft for review</h1></div></div>
+    <p style="margin:0">Choose the best option for each part of the email. Your email builds on the right.</p>
+    ${EMAIL.map(e=>optBlock(e.opts,S.em,e.id,e.q)).join("")}</article>
+   <div class="tray"><div class="trayrow"><button class="btn" data-act="tointro">Back</button><button class="btn primary" data-act="send" ${all?"":"disabled"}>Send the draft</button></div>${all?"":`<p class="small muted" style="margin:0">Choose all seven parts to send it.</p>`}</div>
+  </div><aside class="rules" aria-label="Email preview"><div class="rbody" style="max-height:none">${emailPreview()}</div></aside></div>`;
+}
+function comments(){
+  const i=S.ci,C=COMMENTS[i],all=COMMENTS.every(c=>S.cm[c.id]!=null);
+  $("app").innerHTML=`<div class="queue">${COMMENTS.map((c,n)=>`<button class="dot ${S.cm[c.id]!=null?"ok":""}" data-cgo="${n}" aria-current="${n===i}" aria-label="Comment ${n+1}">${n+1}</button>`).join("")}<span style="flex:1"></span><span class="small muted">Part B · ${COMMENTS.length} replies to your draft</span></div>
+  <div class="left" style="max-width:860px">
+   <article class="case"><div class="casehead"><div><div class="eyebrow">Comment ${i+1} of ${COMMENTS.length} · on ${esc(C.ref)}</div><h1>Reply from ${esc(C.from)}</h1></div></div>
+    <div class="who"><span class="av" style="background:${C.col}">${C.av}</span><div><b>${esc(C.from)}</b><div class="small muted">${esc(C.role)}</div></div></div>
+    <blockquote class="quote">${esc(C.text)}</blockquote>
+    ${optBlock(C.opts,S.cm,C.id,"How do you respond?")}</article>
+   <div class="tray"><div class="trayrow"><button class="btn" data-act="cprev" ${i===0?"":""}>${i===0?"Back to the email":"Previous comment"}</button>
+    ${i<COMMENTS.length-1?`<button class="btn primary" data-act="cnext" ${S.cm[C.id]!=null?"":"disabled"}>Next comment</button>`:`<button class="btn primary" data-act="finish" ${all?"":"disabled"}>Send replies to Aoife</button>`}</div></div></div>`;
+}
+function emailText(){
+  const g=id=>pickTxt(EMAIL.find(e=>e.id===id))||"";const[toL,ccL]=g("to").split(" · ");
+  return [toL,ccL,"Subject: "+g("subj"),"Attachment: LedgerPoint_Q3_2026_Access_Review_DRAFT_v0.1.pdf","","Hi all,","",g("purpose"),"",g("ask"),"",g("deadline"),"",g("conf"),"",g("close"),"","Kind regards,","Junior GRC Analyst","Northbay Payments"].join("\n");
+}
+function logText(){
+  return ["Draft review comment log: LedgerPoint Q3 2026 access review","",...COMMENTS.flatMap((c,n)=>{const a=S.cm[c.id];return[`${n+1}. ${c.from} (${c.role}), on ${c.ref}`,`   Comment: ${c.text}`,`   Response: ${a!=null?c.opts[a][0]:""}`,""]})].join("\n");
+}
+function debrief(){
+  let right=0,tot=0;const traps={};
+  EMAIL.forEach(e=>{tot++;const o=e.opts[S.em[e.id]];if(o&&o[1])right++;else if(o)traps[o[3]]=(traps[o[3]]||0)+1});
+  let cr=0;COMMENTS.forEach(c=>{tot++;const o=c.opts[S.cm[c.id]];if(o&&o[1]){right++;cr++}else if(o)traps[o[3]]=(traps[o[3]]||0)+1});
+  const er=right-cr,pct=Math.round(right/tot*100);
+  const open=pct>=85?"Really well handled. The email set the right tone and you held the line where it mattered.":pct>=65?"Good work. A few replies need adjusting before this goes to the findings call.":pct>=40?"A reasonable start, but some of these responses would cause problems at the findings call.":"Let's go through this together before anything else goes out.";
+  const top=Object.entries(traps).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const good=[];if(er===EMAIL.length)good.push("A clear, professional cover email");if(!traps.cave)good.push("Held firm on findings without new evidence");if(S.cm.c4!=null&&COMMENTS[3].opts[S.cm.c4][1])good.push("Accepted a genuine factual correction quickly");if(!traps.adversarial&&!traps.ignore)good.push("Stayed collaborative with every stakeholder");
+  const better=(list,a)=>list[a]&&!list[a][1]?`<div class="small" style="color:var(--amber)">Aoife's choice: ${esc(list.find(x=>x[1])[0])}</div>`:"";
+  $("app").innerHTML=`<div class="sheet" style="max-width:880px">
+   <div class="who">${AOIFE_FACE()}<div><b>Aoife's review</b><div class="small muted">Stage 3: Draft report review</div></div></div>
+   <p>${open}</p><p>Your email got <b>${er} of ${EMAIL.length}</b> parts right, and you handled <b>${cr} of ${COMMENTS.length}</b> comments the way I would.</p>
+   ${top.length?`<div class="res"><h3>What to work on</h3><ol class="db-list">${top.map(([t,n])=>`<li><b>${TRAPS[t]}</b><span class="small muted">${TRAPHELP[t]} (${n} time${n>1?"s":""})</span></li>`).join("")}</ol></div>`:""}
+   ${good.length?`<div class="res"><h3>What you did well</h3><ul class="db-good">${good.slice(0,3).map(g=>`<li>${g}</li>`).join("")}</ul></div>`:""}
+   <div class="res"><div class="db-head"><h3>Your cover email</h3><button class="btn" data-act="copyemail">Copy email</button></div>${emailPreview()}
+    ${EMAIL.filter(e=>!e.opts[S.em[e.id]]?.[1]).map(e=>`<div class="small" style="color:var(--amber)"><b>${e.label}</b>, Aoife's choice: ${esc(e.opts.find(x=>x[1])[0])}</div>`).join("")}</div>
+   <div class="res"><div class="db-head"><h3>Comment log</h3><button class="btn" data-act="copylog">Copy log</button></div>
+    <p class="small muted" style="margin:0">Keeping a record of every comment and how you responded is standard practice. It's also a good portfolio piece.</p>
+    ${COMMENTS.map(c=>{const a=S.cm[c.id];return`<div class="draft"><div class="eyebrow">${esc(c.from)} · ${esc(c.ref)}</div><span class="small">"${esc(c.text)}"</span><div class="dpart"><b>Your response</b><span>${a!=null?esc(c.opts[a][0]):""}</span>${better(c.opts,a)}</div></div>`}).join("")}</div>
+   <div class="res"><h3>What's next</h3><p style="margin:0">Next is <a href='job01-stage4.html' target='_blank' rel='noopener'><b>Stage 4: the findings call</b></a>, agreeing actions, owners and dates.</p>
+    <div class="row" style="justify-content:flex-start"><button class="btn primary" data-act="restart">Play again</button><button class="btn" data-act="toemail">Back to the email</button></div></div></div>`;
+}
+function copy(txt,title){const fb=()=>{$("modal").innerHTML=`<div class="scrim" data-act="close"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ch"><h2 id="ch">${title}</h2><p class="small muted">Select all the text and copy it.</p><textarea id="ct" style="min-height:280px;font-family:var(--mono);font-size:12px" readonly>${esc(txt)}</textarea><div class="row"><button class="btn" data-act="close">Close</button></div></div></div>`;const ta=$("ct");ta.focus();ta.select()};
+  try{navigator.clipboard.writeText(txt).then(()=>toast("Copied. Paste it into a document."),fb)}catch(err){fb()}}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act],[data-ans],[data-bgo],[data-pick],[data-cgo],[data-mode]");if(!t)return;const d=t.dataset;
+  if(d.mode){S.mode=d.mode;save();renderStats();return}
+  if(d.ans!=null){S.bAns[S.b]=+d.ans;render();return}
+  if(d.bgo!=null){S.b=+d.bgo;render();return}
+  if(d.cgo!=null){S.ci=+d.cgo;S.stage="comments";render();window.scrollTo({top:0});return}
+  if(d.pick){const[w,id,n]=d.pick.split("|");const st=w==="em"?S.em:S.cm;if(S.mode==="training"&&st[id]!=null)return;st[id]=+n;render();return}
+  const a=d.act,top=()=>window.scrollTo({top:0});
+  if(a==="beginbrief"){S.stage="brief";S.b=0;render();return}
+  if(a==="bnext"){S.b++;render();top();return}
+  if(a==="bprev"){S.b--;render();top();return}
+  if(a==="toemail"){S.stage="email";render();top();return}
+  if(a==="tointro"){S.stage="intro";render();top();return}
+  if(a==="send"){S.stage="comments";S.ci=0;render();top();toast("Draft sent. Replies are coming in.");return}
+  if(a==="cnext"){S.ci++;render();top();return}
+  if(a==="cprev"){if(S.ci===0)S.stage="email";else S.ci--;render();top();return}
+  if(a==="finish"){S.stage="debrief";render();top();return}
+  if(a==="replayjob"){S=fresh();S.mode="job";S.stage="email";render();top();return}
+  if(a==="copyemail"){copy(emailText(),"Your cover email");return}
+  if(a==="copylog"){copy(logText(),"Your comment log");return}
+  if(a==="close"){if(e.target===t||t.tagName==="BUTTON")$("modal").innerHTML="";return}
+  if(a==="restart"){if(t.dataset.sure){S=fresh();try{localStorage.removeItem(KEY)}catch(err){}$("modal").innerHTML="";render();return}
+    t.dataset.sure="1";const old=t.textContent;t.textContent="Click again to restart";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent=old}},3000);return}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("modal").innerHTML)$("modal").innerHTML=""});
+render();
+
+</script>
+<!--GLOSSARY--><script>
+/* ---------- Glossary: click a dotted term to open its explanation ---------- */
+(function(){
+const G=[
+ ["grc","GRC",/\bGRC\b(?! (Manager|Officer|Analyst))/,"Governance, risk and compliance. The work of making sure an organisation is run properly, understands its risks, and follows the laws, standards and rules that apply to it.","Checking who has access to the finance system, assessing a new supplier, or writing a security policy.","It's the umbrella name for the jobs this game prepares you for."],
+ ["framework","Framework",/\bframeworks?\b/i,"An agreed set of good practices, published by a professional body or standards organisation. Organisations use it as a checklist for doing something properly.","ISO 27001 for information security, ISACA's ITAF for IT audit, the IIA Standards for internal audit.","Frameworks tell you what good looks like. Employers expect you to know the main ones by name."],
+ ["itaf","ISACA ITAF",/\b(ISACA )?ITAF\b/,"ISACA's IT Audit Framework: standards and guidance for people who audit IT systems and controls. ISACA also runs the CISA certification.","How to plan an IT audit, gather evidence from systems, and report the results.","It's the main reference for audits like the access reviews in this game."],
+ ["iia","IIA Standards",/\bIIA( Global Internal Audit)? Standards\b/,"The Global Internal Audit Standards, published by the Institute of Internal Auditors. They set out how internal audit work should be planned, done and reported.","Every finding should state the criteria, condition, cause, effect and recommendation.","The most widely recognised standard for internal audit worldwide."],
+ ["audit","Audit",/\baudits?\b/i,"An independent check of whether something is done the way it should be, based on evidence, against agreed rules.","Testing every finance system account against the access control policy.","Audits give management and regulators confidence that controls actually work."],
+ ["portfolio","Portfolio",/\bportfolio\b/i,"A collection of real work you can show an employer, like a report you wrote or an action plan you agreed.","The findings report you copy at the end of each job.","Hard to get without experience. This game gives you one."],
+ ["accessreview","Access review",/\baccess reviews?\b/i,"A regular check that every account in a system is still needed, was properly approved, and has only the access the person's job requires.","Each quarter, the system owner confirms that everyone with access to the finance system should still have it.","One of the most common controls auditors test, and a typical first task for a junior analyst."],
+ ["rolematrix","Role matrix",/\b(privileged )?role matrix\b/i,"A table, approved by the system owner, listing which roles each job is allowed in a system.","AP Clerk: AP_Clerk role only.","It's how you tell whether someone's access fits their job."],
+ ["sod","Segregation of duties",/\bsegregation of duties\b|\bSoD\b/i,"Splitting a sensitive task so no single person can complete it from start to finish without someone else checking.","The person who creates a payment can't also approve it.","It's one of the most important controls against fraud and errors."],
+ ["leastpriv","Least privilege",/\bleast privilege\b/i,"Giving people only the access their job needs, and nothing more.","A clerk who enters invoices doesn't need the right to release payments.","Less access means less damage if an account is misused or stolen."],
+ ["jml","Joiners, movers and leavers",/\bjoiners?, movers? and leavers?\b|\bleavers?\b|\bmovers?\b/i,"People starting, changing job, or leaving. Each event should trigger an access change: new access for joiners, removal of old access for movers, removal of all access for leavers.","Someone leaves on Friday, so their access must be disabled on or before Friday.","Leaver and mover access left behind is one of the most common audit findings."],
+ ["dormant","Dormant account",/\bdormant\b/i,"An account nobody has used for a long time.","No login for 200 days.","Nobody is watching it, so misuse could go unnoticed."],
+ ["shared","Shared account",/\bshared (or generic )?accounts?\b|\bgeneric accounts?\b/i,"One login used by several people.","A \"Finance Temp\" account used by whoever is covering at month-end.","The system can't tell who actually did what, so actions are hard to trace."],
+ ["policy","Policy",/\bpolic(y|ies)\b/i,"An organisation's written, approved rules for how something must be done. Everyone has to follow it.","The Access Control Policy says leavers' access is removed on or before their last day.","In an audit, the policy is what you measure against."],
+ ["policygap","Policy gap",/\bpolicy gaps?\b|\bgaps? in the policy\b/i,"A real risk that no rule in the policy covers. It isn't a breach, because nothing is broken, but the policy should be improved.","Contractor access with no end date, when the policy doesn't require one.","Reported as an observation, with a recommendation to update the policy."],
+ ["finding","Finding",/\bfindings?\b/i,"Something an audit found that breaks an agreed rule, backed by evidence.","A leaver can still log in, which breaks the rule that access must be removed by their last day.","Findings go in the report, and each one gets an owner, an action and a date."],
+ ["severity","Severity",/\bseverity\b/i,"How serious a finding is: Low, Medium, High or Critical.","A leaver using the account after leaving is Critical. An unused read-only account is Low.","It tells the business what to fix first, and sets the deadline."],
+ ["escalate","Escalate",/\bescalat(e|ed|es|ing|ion|ions)\b/i,"Telling your manager straight away, instead of waiting for the report.","A former employee logged in last week. Tell your manager now.","Only for things that could be causing harm right now."],
+ ["exception","Exception",/\bexceptions?( register)?\b/i,"Formal, written approval to break a rule for a good reason, usually signed by a senior person such as the CISO and recorded in an exceptions register.","Approval for someone to hold two conflicting roles while covering a vacancy, with extra checks.","Without a recorded exception, \"it's always been allowed\" is still a breach."],
+ ["tor","Terms of reference",/\bterms of reference\b/i,"The agreed plan for an audit: objective, scope, criteria, evidence needed, timeline and who's involved.","Agreed with the system owner before testing starts.","It prevents arguments later about what was covered."],
+ ["scope","Scope",/\bscope\b/i,"What an audit covers and what it doesn't: the system, the time period, and anything left out.","LedgerPoint user access, July to September 2026. Service accounts out of scope.","Readers assume anything not mentioned was checked, so scope must be clear."],
+ ["scopelim","Scope limitation",/\bscope limitations?\b/i,"Something the audit should have covered but couldn't, or was asked to leave out.","Login records were only kept for 30 days, so you couldn't check who used their account earlier in the quarter.","It must be stated in the report so nobody assumes that area was checked."],
+ ["criteria","Criteria",/\bcriteria\b/i,"The rules you test against: policies, standards, matrices or laws.","Access Control Policy v3.2 and the role matrix.","No criteria, no finding. Without a rule, it's just an opinion."],
+ ["rootcause","Root cause",/\broot causes?\b/i,"The underlying reason a problem happened, as opposed to the problem itself.","Leavers keep their access because HR's leaver notices don't reach IT.","Fixing the root cause stops the same finding coming back."],
+ ["execsum","Executive summary",/\bexecutive summar(y|ies)\b/i,"A short paragraph at the top of a report for senior readers: what was reviewed, the headline result, the most serious issue and what to do.","The audit committee may read nothing else.","Write it last, in plain language."],
+ ["opinion","Overall opinion",/\boverall opinion\b/i,"A one-line rating of the whole audit, such as Satisfactory, Needs improvement or Unsatisfactory.","Unsatisfactory: one Critical and four High findings.","It's the first thing senior readers look at."],
+ ["wp","Working papers",/\bworking papers?\b/i,"The evidence and notes behind an audit, each with a reference such as WP2.","WP2: the user export, with a note of how it was checked.","Anyone should be able to check a finding by following its working paper reference."],
+ ["mgmtresp","Management response",/\bmanagement responses?\b/i,"The owner's written reply to a finding, in their own words: Agreed, Partly agreed or Not agreed.","\"Agreed. The weekly leaver check will be in place by 3 December.\"","It shows management accepts the finding and commits to fixing it."],
+ ["findingscall","Findings call",/\bfindings call\b|\bclosing meeting\b/i,"A meeting near the end of an audit where the auditor and the owners agree an action, owner and date for each finding.","Held after the draft report has been reviewed.","Its output, the action plan, is what gets followed up."],
+ ["actionplan","Action plan",/\baction (plan|tracker)s?\b/i,"The list of agreed fixes: what will be done, who owns it, by when, and the evidence that will prove it's done.","Set up a weekly check of leavers. Owner: the IT manager. Due: 3 December. Evidence: four weeks of check records.","Audit tracks it and closes each action only after checking the evidence."],
+ ["draft","Draft report",/\bdraft reports?\b/i,"The first version of an audit report, sent to the owners to check facts before it's finalised.","Sent with a cover email asking for comments by a date.","It avoids surprises and catches factual errors."],
+ ["owner","System owner",/\bsystem owners?\b/i,"The senior person ultimately accountable for a system, including who can use it.","The head of Finance owns the finance system and is ultimately accountable for it. If someone needs access, they decide yes or no. IT then sets it up.","They approve access and the role matrix, and own most audit actions for their system."],
+ ["ciso","CISO",/\bCISO\b/,"Chief Information Security Officer: the senior person responsible for information security.","Owns the security policies and approves exceptions.","Usually the policy owner, and a key reader of audit reports."],
+ ["committee","Audit committee",/\baudit committee\b/i,"A group of board members who oversee audit, risk and controls.","Receives the final report through the GRC Manager.","It's the most senior audience for an audit report."],
+ ["observation","Observation",/\bobservations?\b/i,"Something worth reporting that doesn't break a rule, such as a policy gap or an improvement.","No policy requires contractor access to have an end date.","Reported separately from findings, with no severity rating."],
+ ["entra","Microsoft Entra ID",/\b(Microsoft )?Entra( ID)?\b/,"Microsoft's cloud identity system, previously called Azure AD. It controls who can sign in to Microsoft 365 and Azure, and what they can do.","Every Northbay staff account lives in Entra ID.","Whoever controls Entra ID controls access to email, files and cloud systems."],
+ ["pim","PIM",/\bPIM\b|\bPrivileged Identity Management\b/,"Privileged Identity Management: a Microsoft Entra feature that makes admin roles \"just-in-time\". People activate a role only when they need it, for a limited time, with controls like MFA and approval.","An admin activates Global Administrator for two hours, with a justification.","It reduces standing admin access, a favourite target for attackers."],
+ ["priv","Privileged access",/\bprivileged access\b|\badmin roles?\b/i,"Access that lets someone control systems or other people's access, rather than just use them.","Global Administrator, or the right to reset passwords.","Attackers target it first, so it gets extra controls and review."],
+ ["ga","Global Administrator",/\bGlobal Administrators?\b|\bGlobal Admins?\b/,"The most powerful role in Microsoft Entra ID. It can do anything in the tenant, including give itself any other access.","Changing security settings for the whole company.","Keep holders to a minimum. Microsoft recommends fewer than five."],
+ ["jit","Just-in-time (eligible and active)",/\bjust-in-time\b|\beligible\b/i,"In PIM, an Eligible assignment means the person can switch the role on when they need it, for a limited time. An Active assignment is always on.","Eligible: activate Helpdesk Administrator for 4 hours to fix a password problem.","Always-on admin access is waiting to be stolen. Eligible is the safe default for people."],
+ ["breakglass","Emergency access (break-glass) account",/\bbreak-glass\b|\bemergency access accounts?\b|\bemergency accounts?\b/i,"A spare admin account kept for emergencies, like an outage that locks normal admins out. It has permanent Global Administrator by design.","Protected by a hardware key, alerting Security on every sign-in, tested every 90 days.","Permanent admin looks wrong but is correct here. Test the controls around it instead."],
+ ["sp","Service principal",/\bservice principals?\b/i,"The identity an app uses to sign in and act in Entra ID, like an account for software.","An HR connector that creates staff accounts automatically.","Apps can hold admin roles too, so they need an owner and a review."],
+ ["ticket","Ticket (access request)",/\b(access request )?tickets?\b|\baccess requests?\b/i,"A record in the IT service desk system asking for something to be done, such as giving someone access. An access request ticket shows who asked, which roles they need, who approved it and when IT set it up.","A request for a new starter to get the role for entering invoices, approved by their manager and the system owner, and set up on their first day.","In an access review, the ticket is your evidence that access was approved. Compare it with what the person actually has: no ticket, or more access than the ticket asked for, is a finding."],
+ ["breach","Data breach",/\bdata breach(es)?\b/i,"Personal or confidential data seen, copied, changed or lost by someone who shouldn't have it.","A former employee's account is used to export a list of staff salaries and bank details.","Data protection laws require breaches to be reported. In the EU, under the General Data Protection Regulation (GDPR), a personal data breach usually has to be reported to the regulator within 72 hours, and affected people may need to be told. Most countries have similar laws. Fines and loss of trust can follow."],
+ ["svcacct","Service account",/\bservice accounts?\b/i,"An account used by an application or automated process, not by a person.","svc_bankfeed, which loads bank statements into the finance system every night.","Service accounts are often powerful and rarely watched, and their passwords seldom change. Each one needs a named owner and a regular review."],
+ ["ca","Conditional Access",/\bConditional Access\b/,"Entra rules that decide when sign-in is allowed, such as requiring MFA or blocking unknown countries.","Admins must use MFA from a company device.","Emergency accounts are excluded so they still work if a rule goes wrong."],
+ ["mfa","MFA",/\bMFA\b/,"Multi-factor authentication: proving it's you with something more than a password, such as an app prompt or a security key.","A password plus a tap on your phone.","It stops most attacks that use stolen passwords."],
+ ["fido","FIDO2 key",/\bFIDO2\b/,"A physical security key used to sign in. It can't be phished like a password or a text code.","A USB key you touch to sign in.","Recommended for the most powerful accounts."],
+ ["tier0","Tier 0",/\bTier 0\b/,"The most powerful roles, which can take over everything else.","Global Administrator and Privileged Role Administrator.","These get the strictest controls, like approval for every activation."],
+ ["guest","Guest account",/\bguests?( accounts?)?\b/i,"An account in Entra ID for someone outside the company, like a supplier or consultant.","A consultant from Ardmore Advisory signing in with their own email.","Their access should be limited and end with their contract."],
+ ["tenant","Tenant",/\btenant\b/i,"An organisation's own space in Microsoft's cloud, holding its users, settings and data.","Northbay's Microsoft 365 and Azure tenant.","Control of the tenant means control of everything in it."]
+];
+const css=document.createElement("style");
+css.textContent=`.gterm{border-bottom:1.5px dotted var(--accent,#2457a6);cursor:help;text-decoration:none}
+.gterm:hover,.gterm:focus-visible{background:var(--accent-soft,#e8eef8);outline:none;border-radius:3px}
+#gloss{position:fixed;z-index:60;top:0;right:0;height:100%;width:min(380px,100vw);background:var(--panel,#fff);color:var(--ink,#1b2230);border-left:1px solid var(--line,#e1e6ec);box-shadow:-8px 0 24px rgba(0,0,0,.12);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;align-content:start;gap:12px;overflow:auto;transform:translateX(105%);transition:transform .2s ease;visibility:hidden}
+#gloss.open{transform:none;visibility:visible}
+#gloss .gk{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#5d6879)}
+#gloss h2{margin:0;font-size:22px}#gloss p{margin:0;line-height:1.5}
+#gloss .gb{background:var(--accent-soft,#e8eef8);border-radius:8px;padding:10px 12px;display:grid;gap:2px}#gloss .gb b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent,#2457a6)}
+#gloss .gx{justify-self:end;background:none;border:1px solid var(--line,#e1e6ec);border-radius:8px;padding:6px 10px;cursor:pointer;color:inherit;font:inherit;font-size:13px}
+@media (max-width:700px){#gloss{top:auto;bottom:0;height:auto;max-height:75vh;width:100%;border-left:0;border-top:1px solid var(--line,#e1e6ec);border-radius:16px 16px 0 0;transform:translateY(105%)}}
+@media (prefers-reduced-motion:reduce){#gloss{transition:none}}`;
+document.head.appendChild(css);
+const panel=document.createElement("aside");panel.id="gloss";panel.setAttribute("aria-label","Glossary");panel.setAttribute("role","dialog");
+document.body.appendChild(panel);
+const byKey={};G.forEach(g=>byKey[g[0]]=g);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let lastFocus=null;
+function open(k){const g=byKey[k];if(!g)return;lastFocus=document.activeElement;
+  panel.innerHTML=`<button class="gx" data-gclose>Close ✕</button><div class="gk">Glossary</div><h2>${esc(g[1])}</h2><p>${esc(g[3])}</p><div class="gb"><b>Example</b><span>${esc(g[4])}</span></div><div class="gb"><b>Why it matters</b><span>${esc(g[5])}</span></div>`;
+  wrapIn(panel,new Set([k]),true);panel.classList.add("open");panel.querySelector(".gx").focus()}
+function close(){panel.classList.remove("open");if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+document.addEventListener("click",e=>{const t=e.target.closest(".gterm");if(t){e.preventDefault();e.stopPropagation();open(t.dataset.g);return}
+  if(e.target.closest("[data-gclose]")){close();return}
+  if(panel.classList.contains("open")&&!e.target.closest("#gloss"))close()},true);
+document.addEventListener("keydown",e=>{const t=e.target.closest&&e.target.closest(".gterm");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();open(t.dataset.g)}
+  if(e.key==="Escape"&&panel.classList.contains("open")){e.stopPropagation();close()}},true);
+const SKIP="button,a,label,input,textarea,select,option,td,th,code,script,style,.gterm,#gloss,.m,.mono,.role,.dot,.stamp,.modal,.bar,.tag,.kv,.stat,.chips,summary,h1,legend,.eyebrow";
+function wrap(){wrapIn(document.querySelector(".wrap")||document.body,new Set([...document.querySelectorAll(".wrap .gterm,body>.gterm")].map(x=>x.dataset.g)),false)}
+function wrapIn(root,used,inPanel){
+  const skip=inPanel?"button,h2,.gk,.gterm":SKIP;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>!n.nodeValue.trim()||(n.parentElement&&n.parentElement.closest(skip))||(n.parentElement&&n.parentElement.closest("b")&&inPanel)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  for(const node of nodes){
+    let cur=node;
+    while(cur){
+      let best=null;
+      for(const g of G){if(used.has(g[0]))continue;const m=g[2].exec(cur.nodeValue);if(m&&(!best||m.index<best.m.index||(m.index===best.m.index&&m[0].length>best.m[0].length)))best={g,m}}
+      if(!best)break;const g=best.g,m=best.m;
+      const after=cur.splitText(m.index);const rest=after.splitText(m[0].length);
+      const sp=document.createElement("span");sp.className="gterm";sp.dataset.g=g[0];sp.tabIndex=0;sp.setAttribute("role","button");sp.title="What's this?";sp.textContent=after.nodeValue;
+      after.replaceWith(sp);used.add(g[0]);cur=rest;
+    }
+  }
+}
+let timer=null;
+const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>{obs.disconnect();wrap();obs.observe(document.body,{childList:true,subtree:true})},40)});
+wrap();obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script><!--/GLOSSARY-->
+
+</body></html>

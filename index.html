@@ -1,0 +1,368 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>GRC Learning Game</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Red+Hat+Mono:wght@400;500;600&family=Kalam:wght@700&display=swap">
+<style>
+/* Layout: one case file at a time on the desk (left), the policy rulebook beside it (right), stamp tray under the case */
+:root{
+  --desk:#d9dee5; --paper:#fbfaf6; --paper-line:#e6e2d8; --panel:#ffffff; --ink:#1b2230; --muted:#5d6879; --line:#e1e6ec;
+  --bar:#1d2430; --bar-ink:#e7ebf1; --bar-muted:#9aa6b6;
+  --accent:#2457a6; --accent-soft:#e8eef8; --accent-ink:#ffffff;
+  --red:#c2412d; --red-soft:#fdf1ee; --green:#2f7d55; --green-soft:#e6f3ec; --amber:#a2650b; --amber-soft:#fff3dc;
+  --sans:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --mono:"Red Hat Mono",ui-monospace,monospace; --hand:"Kalam","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0e131a; --paper:#1c222b; --paper-line:#2c3440; --panel:#171e28; --ink:#e3e8ef; --muted:#97a3b3; --line:#2a3442;
+  --bar:#0a0e13; --bar-ink:#e3e8ef; --bar-muted:#8693a4;
+  --accent:#6f9ae0; --accent-soft:#1f2c42; --accent-ink:#0b1424;
+  --red:#ef7a64; --red-soft:#33201d; --green:#64c391; --green-soft:#18302a; --amber:#e7ac4f; --amber-soft:#33281a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{background:var(--bar);color:var(--bar-ink);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:600}
+.brand small,.stat small{display:block;font-size:11px;color:var(--bar-muted)}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+.stat b{font-family:var(--mono);font-weight:500}
+.linkbtn{all:unset;cursor:pointer;font-size:12px;color:var(--bar-muted);text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.dot.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.dot.flag{background:var(--red-soft);color:var(--red);border-color:transparent}
+.dot.gap{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.dot[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink)}
+.dot:focus-visible{outline:2px solid var(--accent)}
+.grid{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.left{flex:999 1 560px;min-width:0;display:grid;gap:14px}
+.rules{flex:1 1 320px;max-width:440px;min-width:0;background:var(--panel);border-radius:12px;overflow:hidden}
+@media (max-width:900px){.rules{max-width:none}}
+/* case file */
+.case{position:relative;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px 14px 14px 14px;padding:20px 22px;display:grid;gap:16px;box-shadow:0 1px 0 var(--paper-line),0 8px 24px #0000000f}
+.case::before{content:"CASE FILE";position:absolute;top:-1px;left:-1px;transform:translateY(-100%);background:var(--paper);border:1px solid var(--paper-line);border-bottom:0;border-radius:8px 8px 0 0;padding:3px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.casehead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.casehead h1{font-size:22px;margin:0;font-weight:600;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec{display:grid;gap:8px;border-top:1px dashed var(--paper-line);padding-top:12px}
+.sec h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}
+.kv div{display:grid;gap:1px;min-width:0}
+.kv span{font-size:11px;color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:500;font-size:13px;overflow-wrap:anywhere}
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.role{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.none{font-size:13px;color:var(--muted);font-style:italic}
+.stamp{position:absolute;right:22px;top:22px;font-family:var(--hand);font-size:30px;padding:2px 14px;border:3px solid currentColor;border-radius:8px;transform:rotate(-8deg);pointer-events:none;background:var(--paper)}
+.stamp.ok{color:var(--green)}.stamp.flag{color:var(--red)}.stamp.gap{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thud .25s ease-out}@keyframes thud{from{transform:rotate(-8deg) scale(1.6);opacity:0}}}
+/* tray */
+.tray{background:var(--panel);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.trayrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.big{cursor:pointer;font-family:var(--hand);font-size:22px;padding:8px 22px;border-radius:10px;border:3px solid currentColor;background:transparent}
+.big.ok{color:var(--green)}.big.flag{color:var(--red)}.big.gap{color:var(--amber)}
+.big:hover{background:var(--panel)}
+.btn{cursor:pointer;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.esc{border-color:var(--red);color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:6px}
+legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;background:var(--panel)}
+.chips label:has(input:checked){border-color:var(--red);background:var(--red-soft)}
+.chips input{accent-color:var(--red)}
+.chips.mono label{font-family:var(--mono)}
+.err{color:var(--red);font-size:13px;margin:0}
+/* rulebook */
+.rtabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+.rtab{all:unset;cursor:pointer;flex:1;text-align:center;padding:11px 6px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+.rtab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+.rtab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rbody{padding:14px 16px;display:grid;gap:2px;max-height:72vh;overflow:auto}
+.clause{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.clause b{font-family:var(--mono);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.m{font-family:var(--mono);white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);padding-top:8px}
+/* overlays */
+.scrim{position:fixed;inset:0;background:#0b0f1599;display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--panel);color:var(--ink);border-radius:12px;width:min(540px,100%);max-height:calc(100% - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.modal h2{margin:0;font-size:18px}
+.modal p{margin:0}
+.who{display:flex;gap:10px;align-items:center}
+.av{flex:0 0 34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+/* intro & debrief */
+.sheet{background:var(--paper);border:1px solid var(--paper-line);border-radius:14px;padding:24px;display:grid;gap:14px;max-width:760px}
+.sheet h1{margin:0;font-size:26px;text-wrap:balance}
+.sheet p{margin:0;max-width:65ch}
+.sheet ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.score{display:flex;flex-wrap:wrap;gap:10px}
+.score div{flex:1 1 130px;border:1px solid var(--paper-line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.score b{display:block;font-family:var(--mono);font-size:22px}
+.res{display:grid;gap:8px}
+.res h3{margin:6px 0 0;font-size:15px}
+.item{border-left:3px solid var(--line);padding:5px 0 5px 12px;display:grid;gap:2px}
+.item.hit{border-left-color:var(--green)}.item.part{border-left-color:var(--amber)}.item.miss{border-left-color:var(--red)}
+.tag{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.hit .tag{color:var(--green)}.part .tag{color:var(--amber)}.miss .tag{color:var(--red)}
+.small{font-size:12.5px}.muted{color:var(--muted)}
+.bigstamp{font-family:var(--hand);font-size:30px;color:var(--red);display:inline-block;border:3px solid var(--red);border-radius:8px;padding:2px 14px;transform:rotate(-4deg)}
+.av-aoife{background:#d7eeec;overflow:hidden;padding:0}.av-aoife svg{width:100%;height:100%;display:block}
+.who .av-aoife{flex-basis:44px;height:44px}
+.aoife-note{display:flex;gap:10px;align-items:flex-start;background:var(--amber-soft);border-radius:10px;padding:10px 12px}
+.aoife-note .av{flex:0 0 38px;height:38px}.aoife-note>div{display:grid;gap:2px;min-width:0}
+.aoife-note .tag{color:var(--amber)}
+.intro-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.intro-top>div{flex:1 1 280px;display:grid;gap:10px}
+.aoife-full{width:150px;height:auto;flex:0 0 auto}
+@media (max-width:520px){.aoife-full{width:110px}}
+.db-msg{display:grid;gap:8px;font-size:15.5px}.db-msg p{margin:0}
+.db-list{margin:0;padding-left:22px;display:grid;gap:14px}.db-list li{display:grid;gap:4px}
+.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.db-report{min-width:640px}.db-report th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px;border-bottom:1px solid var(--line)}
+.db-more{border:1px solid var(--line);border-radius:10px;padding:10px 14px}.db-more summary{cursor:pointer;font-weight:600}.db-more[open] summary{margin-bottom:10px}
+.jobs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:16px}.jobs h3{margin:0 0 4px;font-size:15px}
+.job{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.job>div{display:grid;gap:2px;min-width:0}.job-n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.job-s{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.job.open .job-s{background:var(--green-soft);color:var(--green)}.job.locked{opacity:.75}.job.locked .job-s{background:var(--line);color:var(--muted)}
+@media (max-width:520px){.job{grid-template-columns:1fr}}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--bar);color:var(--bar-ink);padding:10px 14px;border-radius:10px;max-width:340px;font-size:13px}
+.part{border-top:1px solid var(--line);padding-top:12px}.part legend{font-size:14px;letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:6px}
+.opts{display:grid;gap:6px}.btn.opt[disabled]{opacity:1;cursor:default;color:var(--muted)}.btn.opt[disabled][aria-pressed="true"]{color:var(--ink)}
+.btn.opt{text-align:left;font-size:13.5px;line-height:1.4;padding:9px 12px}
+.draft{display:grid;gap:8px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper)}.draft h3{margin:0;font-size:15px}
+.dpart{display:grid;gap:2px;font-size:13.5px}.dpart>b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sev{font-size:11px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}.sev-Critical{background:var(--red);color:#fff}.sev-High{background:var(--red-soft);color:var(--red)}
+.db-list{margin:0;padding-left:22px;display:grid;gap:12px}.db-list li{display:grid;gap:3px}.db-good{margin:0;padding-left:20px;display:grid;gap:4px}
+.mail{border:1px solid var(--line);border-radius:10px;background:var(--paper);overflow:hidden}.mail-h{overflow-wrap:anywhere;display:grid;gap:3px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel);font-size:13.5px}
+.mail-b{padding:12px 14px;display:grid;gap:8px;font-size:14px}.mail-b p{margin:0}
+.quote{margin:0;padding:12px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:15px}
+.case::before{display:none}.case{margin-top:0}
+.db-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.attendees{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.att{display:flex;flex-direction:column;align-items:center;gap:2px}.att .av{width:30px;height:30px;flex:0 0 30px;font-size:11px}
+.who-row{display:flex;gap:10px;align-items:flex-start}.who-row .av{width:32px;height:32px;flex:0 0 32px;font-size:11px}
+.bubble{display:flex;gap:10px;align-items:flex-start}.bubble>div{background:var(--panel);border:1px solid var(--line);border-radius:4px 12px 12px 12px;padding:8px 12px;display:grid;gap:2px;max-width:62ch}
+.stages{display:grid;gap:12px;counter-reset:st}
+.stage{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--paper);border:1px solid var(--paper-line);border-radius:12px;padding:16px 18px}
+.stage .num{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:16px}
+.stage h2{margin:0;font-size:17px}.stage p{margin:2px 0 0;font-size:14px}.stage .out{font-size:12.5px;color:var(--muted)}
+.stage.soon{opacity:.7}.stage.soon .num{background:var(--line);color:var(--muted)}
+@media (max-width:620px){.stage{grid-template-columns:auto 1fr}.stage .btn{grid-column:1/-1;justify-self:start}}
+.cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.cast .who-row{background:var(--paper);border:1px solid var(--paper-line);border-radius:10px;padding:10px 12px}
+.who-row{display:flex;gap:10px;align-items:flex-start}.who-row .av{width:34px;height:34px;flex:0 0 34px;font-size:11px}
+a.btn{text-decoration:none;white-space:nowrap}
+
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.hero h1{font-size:clamp(28px,5vw,40px);line-height:1.15;margin:4px 0 8px}
+.hero .lead{font-size:17px}
+.hero .aoife-full{width:200px;height:auto}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.hero .aoife-full{width:150px;order:-1}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+.card{background:var(--paper);border:1px solid var(--paper-line);border-radius:12px;padding:16px;display:grid;gap:4px;align-content:start}
+.card h3{margin:0;font-size:16px}.card p{margin:0;font-size:14px}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;justify-self:start}
+.tag.live{background:var(--green-soft,#e3f2ea);color:var(--green,#2f7d57)}.tag.soon{background:var(--accent-soft);color:var(--accent)}.tag.plan{background:var(--line);color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px;counter-reset:s}
+.steps .card::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink,#fff);display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:600;margin-bottom:4px}
+.sec-h{font-size:22px;margin:0}
+.wrap>.sheet,.wrap>section{max-width:960px;width:100%;margin-left:auto;margin-right:auto}
+section{display:grid;gap:12px}
+</style>
+<header class="bar">
+  <div class="brand"><div class="logo">N</div><div><b>GRC Learning Game</b><small>Working title · prototype</small></div></div>
+</header>
+<div class="wrap">
+ <div class="sheet hero">
+  <div><div class="eyebrow">A hands-on GRC learning game</div>
+   <h1>Learn GRC by doing the job.</h1>
+   <p class="lead">Join Northbay Payments, a fictional payments company, as a Junior GRC Analyst. Do the work real analysts do: access reviews, audit reports, findings calls and vendor reviews.</p>
+   <p>Every job ends with a piece of work you can put in your portfolio.</p>
+   <div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn primary" href="job01.html">Start Job 01 </a><a class="btn" href="#how">How it works</a></div>
+  </div>
+  <span id="art"></span>
+ </div>
+
+ <section aria-labelledby="who"><h2 class="sec-h" id="who">Who it's for</h2>
+  <div class="cards">
+   <div class="card"><h3>Students</h3><p>Studying cyber security, IT or business and wondering what GRC work actually looks like day to day.</p></div>
+   <div class="card"><h3>Career changers</h3><p>Coming from IT, finance, audit or elsewhere, and need real examples to talk about in interviews.</p></div>
+   <div class="card"><h3>New starters</h3><p>Just landed a first GRC role and want safe practice before doing it for real.</p></div>
+  </div></section>
+
+ <div class="sheet">
+  <h2 class="sec-h">Why this is different</h2>
+  <div style="border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:12px 16px"><p style="margin:0">Frameworks tell you what good audit work looks like. They don't teach you what to do when the system owner asks you to drop her busiest team, or IT tells you "it's fixed". <b>That judgement is what this game teaches.</b></p></div>
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))">
+   <div class="card"><h3>Written by a practitioner</h3><p>Scenarios drawn from real GRC work, not textbook examples.</p></div>
+   <div class="card"><h3>One connected company</h3><p>The same people, systems and policies across every job, so it feels like a real workplace.</p></div>
+   <div class="card"><h3>Judgement, not memorising</h3><p>Pushback, false alarms, live incidents and difficult conversations, not just quiz questions.</p></div>
+   <div class="card"><h3>A portfolio piece every time</h3><p>Findings, reports and action plans you can show an employer.</p></div>
+  </div></div>
+
+ <section aria-labelledby="how"><h2 class="sec-h" id="how">How it works</h2>
+  <div class="steps">
+   <div class="card"><h3>Get briefed</h3><p>Short briefing cards explain the ideas you need, each with a quick check. Skip them if you know it already.</p></div>
+   <div class="card"><h3>Do the job</h3><p>Work through real evidence and decisions, with feedback on every choice as you go.</p></div>
+   <div class="card"><h3>Get reviewed</h3><p>Aoife, your manager, reviews your work: what to fix, what you did well, and her version where yours differs.</p></div>
+   <div class="card"><h3>Keep the output</h3><p>Copy your findings, report or action plan into your portfolio.</p></div>
+  </div></section>
+
+ <section aria-labelledby="jobs"><h2 class="sec-h" id="jobs">The jobs</h2>
+  <div class="cards">
+   <div class="card"><span class="tag live">Live</span><h3>Audit</h3><p><b>Job 01: LedgerPoint access review.</b> A full audit cycle in six stages: plan the audit, test 17 accounts, write the report, handle the draft review, run the findings call and issue the final report.</p><a class="btn primary" style="justify-self:start;margin-top:6px" href="job01.html">Play Job 01 </a>
+    <p style="margin-top:10px"><b>Job 03: Privileged access review.</b> Review admin access in Microsoft Entra PIM: standing Global Admins, emergency accounts, suppliers, apps and access reviews. Harder, and shorter.</p><a class="btn" style="justify-self:start;margin-top:6px" href="job03-stage1.html">Play Job 03 </a></div>
+   <div class="card"><span class="tag soon">Coming soon</span><h3>Third-party risk</h3><p><b>Job 02: Vendor risk review.</b> Review a new payments supplier's SOC 2 report and security questionnaire before the contract is signed.</p></div>
+   <div class="card"><span class="tag plan">Planned</span><h3>Risk management</h3><p>Identify and assess risks, build a risk register, and decide how to treat them.</p></div>
+   <div class="card"><span class="tag plan">Planned</span><h3>AI in GRC</h3><p>Use AI to write audit tests that cover a policy's scope, run repetitive checks, know where AI falls short, and use it ethically and safely with sensitive data.</p><a class="btn" style="justify-self:start;margin-top:6px" href="ai-in-grc.html">See what's planned </a></div>
+  </div>
+  <p class="small muted" style="margin:0">Later: more access reviews on other systems, plus governance, compliance and frameworks, incident and business continuity, privacy, and professional skills.</p></section>
+
+ <div class="sheet"><h2 class="sec-h">Meet Northbay</h2>
+  <p>Northbay Payments is a growing payments company. You'll work with the same people across every job.</p>
+  <div class="cast">
+   <div class="who-row">__AOIFE__<div><b class="small">Aoife Brennan</b> <span class="small muted">· GRC Manager</span><div class="small">Your manager. Briefs you, coaches you, and reviews your work.</div></div></div>
+   <div class="who-row"><span class="av" style="background:#3d8a68">SW</span><div><b class="small">Sinéad Walsh</b> <span class="small muted">· Financial Controller</span><div class="small">Runs Finance and owns LedgerPoint. Busy, direct, and protective of her team.</div></div></div>
+   <div class="who-row"><span class="av" style="background:#9a6b2f">DM</span><div><b class="small">Declan Moran</b> <span class="small muted">· IT Systems Administrator</span><div class="small">Sets up and removes system access. Keen to tell you things are fixed.</div></div></div>
+   <div class="who-row"><span class="av" style="background:#7a5aa8">GR</span><div><b class="small">Gavin Ryan</b> <span class="small muted">· HR Operations Manager</span><div class="small">Handles joiners, movers and leavers. Doesn't think it's HR's problem.</div></div></div>
+   <div class="who-row"><span class="av" style="background:#5d6879">NO</span><div><b class="small">Niamh O'Connor</b> <span class="small muted">· CISO</span><div class="small">Owns the security policies and approves exceptions.</div></div></div>
+  </div></div>
+
+ <p class="small muted" style="max-width:960px;margin:0 auto;width:100%">Built by a practising GRC professional (MSc Cybersecurity, CISA, CISSP, CRISC, CCSK). Follows recognised audit practice (ISACA ITAF, IIA Global Internal Audit Standards), simplified for learning. Real organisations vary. Northbay Payments and everyone in it are fictional.</p>
+</div>
+<script>
+const AOIFE_ART=`<circle cx="200" cy="250" r="185" fill="#d7eeec"/><ellipse cx="200" cy="448" rx="95" ry="12" fill="#1b2a4a" opacity=".15"/><path d="M300 152 L292 176 L314 160 Z" fill="#fff"/><circle cx="322" cy="126" r="34" fill="#fff"/><path d="M306 127 L318 139 L340 112" fill="none" stroke="#2fa37a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><rect x="163" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><rect x="205" y="320" width="32" height="118" rx="14" fill="#1b2a4a"/><ellipse cx="174" cy="440" rx="22" ry="10" fill="#7a2e1d"/><ellipse cx="228" cy="440" rx="22" ry="10" fill="#7a2e1d"/><rect x="189" y="182" width="22" height="34" rx="8" fill="#e9b28f"/><path d="M148 228 Q200 204 252 228 L264 338 Q200 352 136 338 Z" fill="#2457a6"/><path d="M184 212 L200 262 L216 212 Z" fill="#fff"/><path d="M184 212 L200 262 L176 244 L170 220 Z" fill="#1c4585"/><path d="M216 212 L200 262 L224 244 L230 220 Z" fill="#1c4585"/><path d="M190 214 L200 268 L210 214" fill="none" stroke="#25b3a8" stroke-width="4"/><rect x="188" y="266" width="24" height="30" rx="3" fill="#fff"/><rect x="188" y="266" width="24" height="8" rx="2" fill="#25b3a8"/><rect x="193" y="280" width="14" height="3" rx="1.5" fill="#1b2a4a"/><rect x="193" y="286" width="10" height="3" rx="1.5" fill="#1b2a4a"/><path d="M248 236 L282 280 L298 222" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><line x1="300" y1="210" x2="312" y2="180" stroke="#1b2a4a" stroke-width="5" stroke-linecap="round"/><circle cx="300" cy="210" r="13" fill="#f6c9a8"/><g transform="rotate(-8 134 300)"><rect x="98" y="252" width="66" height="88" rx="6" fill="#c98a4b"/><rect x="105" y="262" width="52" height="72" rx="3" fill="#fff"/><rect x="118" y="247" width="26" height="12" rx="4" fill="#5c6670"/><path d="M110 276 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="274" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M110 296 l5 5 l9 -10" fill="none" stroke="#2fa37a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="128" y="294" width="22" height="4" rx="2" fill="#9aa6b2"/><path d="M111 312 l10 10 M121 312 l-10 10" stroke="#e0533d" stroke-width="3" stroke-linecap="round"/><rect x="128" y="314" width="22" height="4" rx="2" fill="#9aa6b2"/></g><path d="M152 236 L140 296" fill="none" stroke="#2457a6" stroke-width="26" stroke-linecap="round"/><circle cx="142" cy="304" r="13" fill="#f6c9a8"/><rect x="140" y="84" width="120" height="100" rx="40" fill="#a9432a"/><circle cx="200" cy="140" r="54" fill="#f6c9a8"/><circle cx="146" cy="146" r="9" fill="#f6c9a8"/><circle cx="254" cy="146" r="9" fill="#f6c9a8"/><path d="M146 138 Q146 84 200 82 Q256 84 256 136 Q236 106 204 108 Q178 104 162 128 Z" fill="#a9432a"/><circle cx="172" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="228" cy="162" r="9" fill="#f39a9a" opacity=".75"/><circle cx="183" cy="145" r="4" fill="#1b2a4a"/><circle cx="217" cy="145" r="4" fill="#1b2a4a"/><circle cx="183" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><circle cx="217" cy="145" r="13" fill="none" stroke="#1b2a4a" stroke-width="3"/><line x1="196" y1="145" x2="204" y2="145" stroke="#1b2a4a" stroke-width="3"/><path d="M190 170 Q200 179 210 170" fill="none" stroke="#1b2a4a" stroke-width="3" stroke-linecap="round"/>`;
+const aoifeArt=(vb,cls)=>`<svg class="${cls}" viewBox="${vb}" role="img" aria-label="Aoife Brennan" xmlns="http://www.w3.org/2000/svg">${AOIFE_ART}</svg>`;
+const AOIFE_FULL=()=>aoifeArt("0 30 400 440","aoife-full");
+const AOIFE_FACE=()=>`<span class="av av-aoife">${aoifeArt("138 76 124 124","")}</span>`;
+
+document.getElementById("art").outerHTML=AOIFE_FULL();
+document.querySelectorAll(".cast .who-row").forEach(r=>{if(r.innerHTML.includes("__AOIFE__"))r.innerHTML=r.innerHTML.replace("__AOIFE__",AOIFE_FACE())});
+</script>
+
+<style>.av-art{overflow:hidden;padding:0}.av-art svg{width:100%;height:100%;display:block}.who .av-art{flex-basis:44px;width:44px;height:44px}</style>
+<script>
+/* Cast illustrations: swap initials avatars for drawn faces */
+(()=>{const CAST={"SW": ["Sinéad Walsh", "138 76 124 124", "#e3efe7", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#e3efe7\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M100 152 L108 176 L86 160 Z\" fill=\"#fff\"/><circle cx=\"78\" cy=\"126\" r=\"34\" fill=\"#fff\"/><circle cx=\"78\" cy=\"126\" r=\"20\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"5\"/><path d=\"M78 114 L78 126 L88 132\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"166\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><rect x=\"204\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><ellipse cx=\"176\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#1b2a4a\"/><ellipse cx=\"226\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#1b2a4a\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#d99a72\"/><path d=\"M146 228 Q200 204 254 228 L264 338 Q200 352 136 338 Z\" fill=\"#3d8a68\"/><path d=\"M186 212 L200 250 L214 212 Z\" fill=\"#f4efe6\"/><path d=\"M186 212 L200 250 L178 240 L170 220 Z\" fill=\"#2f6e52\"/><path d=\"M214 212 L200 250 L222 240 L230 220 Z\" fill=\"#2f6e52\"/><path d=\"M190 216 Q200 232 210 216\" fill=\"none\" stroke=\"#e7b54a\" stroke-width=\"2.5\"/><circle cx=\"200\" cy=\"228\" r=\"3.5\" fill=\"#e7b54a\"/><path d=\"M150 240 Q132 290 160 300 L236 296\" fill=\"none\" stroke=\"#3d8a68\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M250 240 Q268 288 240 300 L170 304\" fill=\"none\" stroke=\"#2f6e52\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"238\" cy=\"290\" r=\"12\" fill=\"#f0b993\"/><circle cx=\"164\" cy=\"306\" r=\"12\" fill=\"#f0b993\"/><rect x=\"226\" y=\"268\" width=\"18\" height=\"30\" rx=\"4\" fill=\"#1b2a4a\" transform=\"rotate(14 235 283)\"/><rect x=\"229\" y=\"272\" width=\"12\" height=\"20\" rx=\"2\" fill=\"#7fc4d9\" transform=\"rotate(14 235 283)\"/><path d=\"M138 140 Q138 78 200 76 Q262 78 262 140 L264 190 Q246 198 236 186 L164 186 Q154 198 136 190 Z\" fill=\"#2a1f1c\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#f0b993\"/><circle cx=\"146\" cy=\"148\" r=\"9\" fill=\"#f0b993\"/><circle cx=\"254\" cy=\"148\" r=\"9\" fill=\"#f0b993\"/><circle cx=\"146\" cy=\"160\" r=\"4\" fill=\"#e7b54a\"/><circle cx=\"254\" cy=\"160\" r=\"4\" fill=\"#e7b54a\"/><path d=\"M144 146 Q140 84 200 80 Q258 82 258 134 Q250 116 236 108 Q206 92 172 112 Q154 124 150 152 Z\" fill=\"#2a1f1c\"/><path d=\"M258 134 Q262 168 252 190 L246 150 Z\" fill=\"#2a1f1c\"/><circle cx=\"172\" cy=\"164\" r=\"8\" fill=\"#e98b7f\" opacity=\".6\"/><circle cx=\"228\" cy=\"164\" r=\"8\" fill=\"#e98b7f\" opacity=\".6\"/><path d=\"M174 132 L192 134\" stroke=\"#2a1f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M208 130 Q218 122 228 128\" fill=\"none\" stroke=\"#2a1f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"184\" cy=\"147\" r=\"4.5\" fill=\"#1b2a4a\"/><circle cx=\"217\" cy=\"146\" r=\"4.5\" fill=\"#1b2a4a\"/><path d=\"M190 172 Q200 170 212 168\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3\" stroke-linecap=\"round\"/>"], "DM": ["Declan Moran", "138 74 124 124", "#f1e6d6", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#f1e6d6\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M300 152 L292 176 L314 160 Z\" fill=\"#fff\"/><circle cx=\"322\" cy=\"126\" r=\"34\" fill=\"#fff\"/><g transform=\"rotate(-45 322 126)\"><rect x=\"317\" y=\"112\" width=\"10\" height=\"34\" rx=\"4\" fill=\"#5c6670\"/><path d=\"M308 110 a14 14 0 1 0 28 0 l-8 0 l0 8 l-12 0 l0 -8 Z\" fill=\"#5c6670\"/></g><rect x=\"164\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#3b5a86\"/><rect x=\"204\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#3b5a86\"/><ellipse cx=\"174\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#fff\" stroke=\"#c9ced6\" stroke-width=\"2\"/><ellipse cx=\"228\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#fff\" stroke=\"#c9ced6\" stroke-width=\"2\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#e6a983\"/><path d=\"M146 228 Q200 206 254 228 L264 340 Q200 352 136 340 Z\" fill=\"#9a6b2f\"/><path d=\"M170 214 Q200 240 230 214 Q214 228 200 230 Q186 228 170 214 Z\" fill=\"#7d5624\"/><line x1=\"192\" y1=\"230\" x2=\"190\" y2=\"262\" stroke=\"#f1e6d6\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"208\" y1=\"230\" x2=\"210\" y2=\"262\" stroke=\"#f1e6d6\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M168 300 L232 300 L226 330 L174 330 Z\" fill=\"#7d5624\"/><rect x=\"214\" y=\"268\" width=\"20\" height=\"24\" rx=\"3\" fill=\"#fff\"/><rect x=\"214\" y=\"268\" width=\"20\" height=\"7\" rx=\"2\" fill=\"#25b3a8\"/><rect x=\"104\" y=\"262\" width=\"62\" height=\"44\" rx=\"5\" fill=\"#9aa6b2\" transform=\"rotate(-12 135 284)\"/><circle cx=\"134\" cy=\"284\" r=\"5\" fill=\"#d6dbe1\" transform=\"rotate(-12 135 284)\"/><path d=\"M152 236 L144 292\" fill=\"none\" stroke=\"#9a6b2f\" stroke-width=\"26\" stroke-linecap=\"round\"/><circle cx=\"146\" cy=\"300\" r=\"13\" fill=\"#f2bd98\"/><path d=\"M248 236 L282 276 L290 226\" fill=\"none\" stroke=\"#9a6b2f\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"278\" y=\"204\" width=\"24\" height=\"22\" rx=\"8\" fill=\"#f2bd98\"/><rect x=\"283\" y=\"184\" width=\"10\" height=\"26\" rx=\"5\" fill=\"#f2bd98\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#f2bd98\"/><circle cx=\"146\" cy=\"146\" r=\"9\" fill=\"#f2bd98\"/><circle cx=\"254\" cy=\"146\" r=\"9\" fill=\"#f2bd98\"/><path d=\"M148 128 Q144 82 196 80 Q252 78 254 126 L246 112 L238 120 L230 104 L218 114 L208 98 L196 112 L184 98 L174 114 L164 104 L158 122 Z\" fill=\"#c4622d\"/><path d=\"M152 150 Q156 196 200 196 Q244 196 248 150 Q240 176 200 178 Q160 176 152 150 Z\" fill=\"#c4622d\" opacity=\".55\"/><circle cx=\"170\" cy=\"160\" r=\"8\" fill=\"#ef8f86\" opacity=\".6\"/><circle cx=\"230\" cy=\"160\" r=\"8\" fill=\"#ef8f86\" opacity=\".6\"/><path d=\"M174 130 Q183 124 192 130\" fill=\"none\" stroke=\"#8a3f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M208 130 Q217 124 226 130\" fill=\"none\" stroke=\"#8a3f1c\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"183\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><circle cx=\"217\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><path d=\"M184 164 Q200 182 216 164 Z\" fill=\"#fff\" stroke=\"#1b2a4a\" stroke-width=\"3\" stroke-linejoin=\"round\"/>"], "GR": ["Gavin Ryan", "138 76 124 124", "#ebe4f3", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#ebe4f3\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M100 152 L108 176 L86 160 Z\" fill=\"#fff\"/><circle cx=\"78\" cy=\"126\" r=\"34\" fill=\"#fff\"/><path d=\"M68 116 Q68 104 79 104 Q90 104 90 114 Q90 122 80 126 L79 134\" fill=\"none\" stroke=\"#7a5aa8\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"79\" cy=\"146\" r=\"4\" fill=\"#7a5aa8\"/><rect x=\"164\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#b59a72\"/><rect x=\"204\" y=\"320\" width=\"32\" height=\"118\" rx=\"14\" fill=\"#b59a72\"/><ellipse cx=\"174\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#4a2e1d\"/><ellipse cx=\"228\" cy=\"440\" rx=\"22\" ry=\"10\" fill=\"#4a2e1d\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#a8704c\"/><path d=\"M146 228 Q200 206 254 228 L262 340 Q200 352 138 340 Z\" fill=\"#7a5aa8\"/><path d=\"M180 212 L200 246 L220 212 Z\" fill=\"#fff\"/><path d=\"M180 212 L192 230 L176 226 Z M220 212 L208 230 L224 226 Z\" fill=\"#e6e9ee\"/><path d=\"M196 222 L204 222 L206 246 L200 254 L194 246 Z\" fill=\"#2e3a59\"/><path d=\"M140 330 L260 330\" stroke=\"#654894\" stroke-width=\"10\"/><path d=\"M152 236 L114 262 L96 226\" fill=\"none\" stroke=\"#7a5aa8\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M248 236 L286 262 L304 226\" fill=\"none\" stroke=\"#7a5aa8\" stroke-width=\"26\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><ellipse cx=\"94\" cy=\"214\" rx=\"15\" ry=\"11\" fill=\"#c58b65\"/><ellipse cx=\"306\" cy=\"214\" rx=\"15\" ry=\"11\" fill=\"#c58b65\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#c58b65\"/><circle cx=\"146\" cy=\"146\" r=\"9\" fill=\"#c58b65\"/><circle cx=\"254\" cy=\"146\" r=\"9\" fill=\"#c58b65\"/><path d=\"M148 132 Q142 82 198 80 Q256 80 254 130 Q246 104 222 100 Q196 98 176 106 Q160 112 154 136 Z\" fill=\"#3a2a22\"/><path d=\"M176 106 Q196 90 230 96\" fill=\"none\" stroke=\"#2a1d17\" stroke-width=\"3\"/><circle cx=\"170\" cy=\"160\" r=\"8\" fill=\"#d9746a\" opacity=\".5\"/><circle cx=\"230\" cy=\"160\" r=\"8\" fill=\"#d9746a\" opacity=\".5\"/><path d=\"M174 126 Q183 118 192 124\" fill=\"none\" stroke=\"#2a1d17\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M208 124 Q217 118 226 126\" fill=\"none\" stroke=\"#2a1d17\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"183\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><circle cx=\"217\" cy=\"144\" r=\"4.5\" fill=\"#1b2a4a\"/><path d=\"M188 170 Q200 174 212 166\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3\" stroke-linecap=\"round\"/>"], "NO": ["Niamh O'Connor", "134 52 132 132", "#e4e8ee", "<circle cx=\"200\" cy=\"250\" r=\"185\" fill=\"#e4e8ee\"/><ellipse cx=\"200\" cy=\"448\" rx=\"95\" ry=\"12\" fill=\"#1b2a4a\" opacity=\".15\"/><path d=\"M300 152 L292 176 L314 160 Z\" fill=\"#fff\"/><circle cx=\"322\" cy=\"126\" r=\"34\" fill=\"#fff\"/><path d=\"M322 104 L342 112 Q342 138 322 150 Q302 138 302 112 Z\" fill=\"#5d6879\"/><path d=\"M313 126 L320 133 L332 118\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"166\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><rect x=\"204\" y=\"320\" width=\"30\" height=\"118\" rx=\"14\" fill=\"#2b3340\"/><ellipse cx=\"176\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#8a2f3c\"/><ellipse cx=\"226\" cy=\"440\" rx=\"21\" ry=\"9\" fill=\"#8a2f3c\"/><rect x=\"189\" y=\"182\" width=\"22\" height=\"34\" rx=\"8\" fill=\"#ecc0a4\"/><path d=\"M146 228 Q200 204 254 228 L264 338 Q200 352 136 338 Z\" fill=\"#5d6879\"/><path d=\"M184 212 L200 256 L216 212 Z\" fill=\"#c9d3df\"/><path d=\"M184 212 L200 256 L176 244 L170 220 Z\" fill=\"#4a5363\"/><path d=\"M216 212 L200 256 L224 244 L230 220 Z\" fill=\"#4a5363\"/><circle cx=\"200\" cy=\"290\" r=\"3.5\" fill=\"#2b3340\"/><circle cx=\"200\" cy=\"312\" r=\"3.5\" fill=\"#2b3340\"/><g transform=\"rotate(6 236 290)\"><rect x=\"206\" y=\"250\" width=\"58\" height=\"80\" rx=\"5\" fill=\"#1b2a4a\"/><rect x=\"214\" y=\"262\" width=\"42\" height=\"24\" rx=\"3\" fill=\"#fff\"/><rect x=\"219\" y=\"268\" width=\"30\" height=\"4\" rx=\"2\" fill=\"#1b2a4a\"/><rect x=\"219\" y=\"276\" width=\"20\" height=\"4\" rx=\"2\" fill=\"#9aa6b2\"/></g><path d=\"M250 238 Q266 286 236 300\" fill=\"none\" stroke=\"#5d6879\" stroke-width=\"26\" stroke-linecap=\"round\"/><circle cx=\"232\" cy=\"300\" r=\"12\" fill=\"#f6d0b6\"/><path d=\"M150 238 L140 296\" fill=\"none\" stroke=\"#5d6879\" stroke-width=\"26\" stroke-linecap=\"round\"/><circle cx=\"142\" cy=\"304\" r=\"13\" fill=\"#f6d0b6\"/><circle cx=\"200\" cy=\"140\" r=\"54\" fill=\"#f6d0b6\"/><circle cx=\"146\" cy=\"146\" r=\"9\" fill=\"#f6d0b6\"/><circle cx=\"254\" cy=\"146\" r=\"9\" fill=\"#f6d0b6\"/><circle cx=\"146\" cy=\"158\" r=\"3.5\" fill=\"#c9d3df\"/><circle cx=\"254\" cy=\"158\" r=\"3.5\" fill=\"#c9d3df\"/><circle cx=\"200\" cy=\"76\" r=\"22\" fill=\"#d8b25e\"/><path d=\"M146 140 Q140 86 200 84 Q260 86 254 140 Q248 108 222 102 Q200 98 180 104 Q152 112 146 140 Z\" fill=\"#e2bf6c\"/><path d=\"M180 104 Q198 96 226 100\" fill=\"none\" stroke=\"#c9a14c\" stroke-width=\"3\"/><circle cx=\"171\" cy=\"161\" r=\"8\" fill=\"#ef9a90\" opacity=\".6\"/><circle cx=\"229\" cy=\"161\" r=\"8\" fill=\"#ef9a90\" opacity=\".6\"/><path d=\"M174 130 Q183 126 192 129\" fill=\"none\" stroke=\"#a07c34\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M208 129 Q217 126 226 130\" fill=\"none\" stroke=\"#a07c34\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M177 145 Q183 140 189 145\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M211 145 Q217 140 223 145\" fill=\"none\" stroke=\"#1b2a4a\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><path d=\"M190 168 Q200 176 210 168\" fill=\"none\" stroke=\"#b24a52\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>"]};
+const up=()=>document.querySelectorAll(".av:not(.av-art)").forEach(el=>{const c=CAST[el.textContent.trim()];if(!c)return;el.classList.add("av-art");el.style.background=c[2];el.setAttribute("role","img");el.setAttribute("aria-label",c[0]);el.innerHTML=`<svg viewBox="${c[1]}" xmlns="http://www.w3.org/2000/svg">${c[3]}</svg>`});
+up();new MutationObserver(up).observe(document.body,{childList:true,subtree:true});})();
+</script>
+<!--GLOSSARY--><script>
+/* ---------- Glossary: click a dotted term to open its explanation ---------- */
+(function(){
+const G=[
+ ["grc","GRC",/\bGRC\b(?! (Manager|Officer|Analyst))/,"Governance, risk and compliance. The work of making sure an organisation is run properly, understands its risks, and follows the laws, standards and rules that apply to it.","Checking who has access to the finance system, assessing a new supplier, or writing a security policy.","It's the umbrella name for the jobs this game prepares you for."],
+ ["framework","Framework",/\bframeworks?\b/i,"An agreed set of good practices, published by a professional body or standards organisation. Organisations use it as a checklist for doing something properly.","ISO 27001 for information security, ISACA's ITAF for IT audit, the IIA Standards for internal audit.","Frameworks tell you what good looks like. Employers expect you to know the main ones by name."],
+ ["itaf","ISACA ITAF",/\b(ISACA )?ITAF\b/,"ISACA's IT Audit Framework: standards and guidance for people who audit IT systems and controls. ISACA also runs the CISA certification.","How to plan an IT audit, gather evidence from systems, and report the results.","It's the main reference for audits like the access reviews in this game."],
+ ["iia","IIA Standards",/\bIIA( Global Internal Audit)? Standards\b/,"The Global Internal Audit Standards, published by the Institute of Internal Auditors. They set out how internal audit work should be planned, done and reported.","Every finding should state the criteria, condition, cause, effect and recommendation.","The most widely recognised standard for internal audit worldwide."],
+ ["audit","Audit",/\baudits?\b/i,"An independent check of whether something is done the way it should be, based on evidence, against agreed rules.","Testing every finance system account against the access control policy.","Audits give management and regulators confidence that controls actually work."],
+ ["portfolio","Portfolio",/\bportfolio\b/i,"A collection of real work you can show an employer, like a report you wrote or an action plan you agreed.","The findings report you copy at the end of each job.","Hard to get without experience. This game gives you one."],
+ ["accessreview","Access review",/\baccess reviews?\b/i,"A regular check that every account in a system is still needed, was properly approved, and has only the access the person's job requires.","Each quarter, the system owner confirms that everyone with access to the finance system should still have it.","One of the most common controls auditors test, and a typical first task for a junior analyst."],
+ ["rolematrix","Role matrix",/\b(privileged )?role matrix\b/i,"A table, approved by the system owner, listing which roles each job is allowed in a system.","AP Clerk: AP_Clerk role only.","It's how you tell whether someone's access fits their job."],
+ ["sod","Segregation of duties",/\bsegregation of duties\b|\bSoD\b/i,"Splitting a sensitive task so no single person can complete it from start to finish without someone else checking.","The person who creates a payment can't also approve it.","It's one of the most important controls against fraud and errors."],
+ ["leastpriv","Least privilege",/\bleast privilege\b/i,"Giving people only the access their job needs, and nothing more.","A clerk who enters invoices doesn't need the right to release payments.","Less access means less damage if an account is misused or stolen."],
+ ["jml","Joiners, movers and leavers",/\bjoiners?, movers? and leavers?\b|\bleavers?\b|\bmovers?\b/i,"People starting, changing job, or leaving. Each event should trigger an access change: new access for joiners, removal of old access for movers, removal of all access for leavers.","Someone leaves on Friday, so their access must be disabled on or before Friday.","Leaver and mover access left behind is one of the most common audit findings."],
+ ["dormant","Dormant account",/\bdormant\b/i,"An account nobody has used for a long time.","No login for 200 days.","Nobody is watching it, so misuse could go unnoticed."],
+ ["shared","Shared account",/\bshared (or generic )?accounts?\b|\bgeneric accounts?\b/i,"One login used by several people.","A \"Finance Temp\" account used by whoever is covering at month-end.","The system can't tell who actually did what, so actions are hard to trace."],
+ ["policy","Policy",/\bpolic(y|ies)\b/i,"An organisation's written, approved rules for how something must be done. Everyone has to follow it.","The Access Control Policy says leavers' access is removed on or before their last day.","In an audit, the policy is what you measure against."],
+ ["policygap","Policy gap",/\bpolicy gaps?\b|\bgaps? in the policy\b/i,"A real risk that no rule in the policy covers. It isn't a breach, because nothing is broken, but the policy should be improved.","Contractor access with no end date, when the policy doesn't require one.","Reported as an observation, with a recommendation to update the policy."],
+ ["finding","Finding",/\bfindings?\b/i,"Something an audit found that breaks an agreed rule, backed by evidence.","A leaver can still log in, which breaks the rule that access must be removed by their last day.","Findings go in the report, and each one gets an owner, an action and a date."],
+ ["severity","Severity",/\bseverity\b/i,"How serious a finding is: Low, Medium, High or Critical.","A leaver using the account after leaving is Critical. An unused read-only account is Low.","It tells the business what to fix first, and sets the deadline."],
+ ["escalate","Escalate",/\bescalat(e|ed|es|ing|ion|ions)\b/i,"Telling your manager straight away, instead of waiting for the report.","A former employee logged in last week. Tell your manager now.","Only for things that could be causing harm right now."],
+ ["exception","Exception",/\bexceptions?( register)?\b/i,"Formal, written approval to break a rule for a good reason, usually signed by a senior person such as the CISO and recorded in an exceptions register.","Approval for someone to hold two conflicting roles while covering a vacancy, with extra checks.","Without a recorded exception, \"it's always been allowed\" is still a breach."],
+ ["tor","Terms of reference",/\bterms of reference\b/i,"The agreed plan for an audit: objective, scope, criteria, evidence needed, timeline and who's involved.","Agreed with the system owner before testing starts.","It prevents arguments later about what was covered."],
+ ["scope","Scope",/\bscope\b/i,"What an audit covers and what it doesn't: the system, the time period, and anything left out.","LedgerPoint user access, July to September 2026. Service accounts out of scope.","Readers assume anything not mentioned was checked, so scope must be clear."],
+ ["scopelim","Scope limitation",/\bscope limitations?\b/i,"Something the audit should have covered but couldn't, or was asked to leave out.","Login records were only kept for 30 days, so you couldn't check who used their account earlier in the quarter.","It must be stated in the report so nobody assumes that area was checked."],
+ ["criteria","Criteria",/\bcriteria\b/i,"The rules you test against: policies, standards, matrices or laws.","Access Control Policy v3.2 and the role matrix.","No criteria, no finding. Without a rule, it's just an opinion."],
+ ["rootcause","Root cause",/\broot causes?\b/i,"The underlying reason a problem happened, as opposed to the problem itself.","Leavers keep their access because HR's leaver notices don't reach IT.","Fixing the root cause stops the same finding coming back."],
+ ["execsum","Executive summary",/\bexecutive summar(y|ies)\b/i,"A short paragraph at the top of a report for senior readers: what was reviewed, the headline result, the most serious issue and what to do.","The audit committee may read nothing else.","Write it last, in plain language."],
+ ["opinion","Overall opinion",/\boverall opinion\b/i,"A one-line rating of the whole audit, such as Satisfactory, Needs improvement or Unsatisfactory.","Unsatisfactory: one Critical and four High findings.","It's the first thing senior readers look at."],
+ ["wp","Working papers",/\bworking papers?\b/i,"The evidence and notes behind an audit, each with a reference such as WP2.","WP2: the user export, with a note of how it was checked.","Anyone should be able to check a finding by following its working paper reference."],
+ ["mgmtresp","Management response",/\bmanagement responses?\b/i,"The owner's written reply to a finding, in their own words: Agreed, Partly agreed or Not agreed.","\"Agreed. The weekly leaver check will be in place by 3 December.\"","It shows management accepts the finding and commits to fixing it."],
+ ["findingscall","Findings call",/\bfindings call\b|\bclosing meeting\b/i,"A meeting near the end of an audit where the auditor and the owners agree an action, owner and date for each finding.","Held after the draft report has been reviewed.","Its output, the action plan, is what gets followed up."],
+ ["actionplan","Action plan",/\baction (plan|tracker)s?\b/i,"The list of agreed fixes: what will be done, who owns it, by when, and the evidence that will prove it's done.","Set up a weekly check of leavers. Owner: the IT manager. Due: 3 December. Evidence: four weeks of check records.","Audit tracks it and closes each action only after checking the evidence."],
+ ["draft","Draft report",/\bdraft reports?\b/i,"The first version of an audit report, sent to the owners to check facts before it's finalised.","Sent with a cover email asking for comments by a date.","It avoids surprises and catches factual errors."],
+ ["owner","System owner",/\bsystem owners?\b/i,"The senior person ultimately accountable for a system, including who can use it.","The head of Finance owns the finance system and is ultimately accountable for it. If someone needs access, they decide yes or no. IT then sets it up.","They approve access and the role matrix, and own most audit actions for their system."],
+ ["ciso","CISO",/\bCISO\b/,"Chief Information Security Officer: the senior person responsible for information security.","Owns the security policies and approves exceptions.","Usually the policy owner, and a key reader of audit reports."],
+ ["committee","Audit committee",/\baudit committee\b/i,"A group of board members who oversee audit, risk and controls.","Receives the final report through the GRC Manager.","It's the most senior audience for an audit report."],
+ ["observation","Observation",/\bobservations?\b/i,"Something worth reporting that doesn't break a rule, such as a policy gap or an improvement.","No policy requires contractor access to have an end date.","Reported separately from findings, with no severity rating."],
+ ["entra","Microsoft Entra ID",/\b(Microsoft )?Entra( ID)?\b/,"Microsoft's cloud identity system, previously called Azure AD. It controls who can sign in to Microsoft 365 and Azure, and what they can do.","Every Northbay staff account lives in Entra ID.","Whoever controls Entra ID controls access to email, files and cloud systems."],
+ ["pim","PIM",/\bPIM\b|\bPrivileged Identity Management\b/,"Privileged Identity Management: a Microsoft Entra feature that makes admin roles \"just-in-time\". People activate a role only when they need it, for a limited time, with controls like MFA and approval.","An admin activates Global Administrator for two hours, with a justification.","It reduces standing admin access, a favourite target for attackers."],
+ ["priv","Privileged access",/\bprivileged access\b|\badmin roles?\b/i,"Access that lets someone control systems or other people's access, rather than just use them.","Global Administrator, or the right to reset passwords.","Attackers target it first, so it gets extra controls and review."],
+ ["ga","Global Administrator",/\bGlobal Administrators?\b|\bGlobal Admins?\b/,"The most powerful role in Microsoft Entra ID. It can do anything in the tenant, including give itself any other access.","Changing security settings for the whole company.","Keep holders to a minimum. Microsoft recommends fewer than five."],
+ ["jit","Just-in-time (eligible and active)",/\bjust-in-time\b|\beligible\b/i,"In PIM, an Eligible assignment means the person can switch the role on when they need it, for a limited time. An Active assignment is always on.","Eligible: activate Helpdesk Administrator for 4 hours to fix a password problem.","Always-on admin access is waiting to be stolen. Eligible is the safe default for people."],
+ ["breakglass","Emergency access (break-glass) account",/\bbreak-glass\b|\bemergency access accounts?\b|\bemergency accounts?\b/i,"A spare admin account kept for emergencies, like an outage that locks normal admins out. It has permanent Global Administrator by design.","Protected by a hardware key, alerting Security on every sign-in, tested every 90 days.","Permanent admin looks wrong but is correct here. Test the controls around it instead."],
+ ["sp","Service principal",/\bservice principals?\b/i,"The identity an app uses to sign in and act in Entra ID, like an account for software.","An HR connector that creates staff accounts automatically.","Apps can hold admin roles too, so they need an owner and a review."],
+ ["ticket","Ticket (access request)",/\b(access request )?tickets?\b|\baccess requests?\b/i,"A record in the IT service desk system asking for something to be done, such as giving someone access. An access request ticket shows who asked, which roles they need, who approved it and when IT set it up.","A request for a new starter to get the role for entering invoices, approved by their manager and the system owner, and set up on their first day.","In an access review, the ticket is your evidence that access was approved. Compare it with what the person actually has: no ticket, or more access than the ticket asked for, is a finding."],
+ ["breach","Data breach",/\bdata breach(es)?\b/i,"Personal or confidential data seen, copied, changed or lost by someone who shouldn't have it.","A former employee's account is used to export a list of staff salaries and bank details.","Data protection laws require breaches to be reported. In the EU, under the General Data Protection Regulation (GDPR), a personal data breach usually has to be reported to the regulator within 72 hours, and affected people may need to be told. Most countries have similar laws. Fines and loss of trust can follow."],
+ ["svcacct","Service account",/\bservice accounts?\b/i,"An account used by an application or automated process, not by a person.","svc_bankfeed, which loads bank statements into the finance system every night.","Service accounts are often powerful and rarely watched, and their passwords seldom change. Each one needs a named owner and a regular review."],
+ ["ca","Conditional Access",/\bConditional Access\b/,"Entra rules that decide when sign-in is allowed, such as requiring MFA or blocking unknown countries.","Admins must use MFA from a company device.","Emergency accounts are excluded so they still work if a rule goes wrong."],
+ ["mfa","MFA",/\bMFA\b/,"Multi-factor authentication: proving it's you with something more than a password, such as an app prompt or a security key.","A password plus a tap on your phone.","It stops most attacks that use stolen passwords."],
+ ["fido","FIDO2 key",/\bFIDO2\b/,"A physical security key used to sign in. It can't be phished like a password or a text code.","A USB key you touch to sign in.","Recommended for the most powerful accounts."],
+ ["tier0","Tier 0",/\bTier 0\b/,"The most powerful roles, which can take over everything else.","Global Administrator and Privileged Role Administrator.","These get the strictest controls, like approval for every activation."],
+ ["guest","Guest account",/\bguests?( accounts?)?\b/i,"An account in Entra ID for someone outside the company, like a supplier or consultant.","A consultant from Ardmore Advisory signing in with their own email.","Their access should be limited and end with their contract."],
+ ["tenant","Tenant",/\btenant\b/i,"An organisation's own space in Microsoft's cloud, holding its users, settings and data.","Northbay's Microsoft 365 and Azure tenant.","Control of the tenant means control of everything in it."]
+];
+const css=document.createElement("style");
+css.textContent=`.gterm{border-bottom:1.5px dotted var(--accent,#2457a6);cursor:help;text-decoration:none}
+.gterm:hover,.gterm:focus-visible{background:var(--accent-soft,#e8eef8);outline:none;border-radius:3px}
+#gloss{position:fixed;z-index:60;top:0;right:0;height:100%;width:min(380px,100vw);background:var(--panel,#fff);color:var(--ink,#1b2230);border-left:1px solid var(--line,#e1e6ec);box-shadow:-8px 0 24px rgba(0,0,0,.12);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;align-content:start;gap:12px;overflow:auto;transform:translateX(105%);transition:transform .2s ease;visibility:hidden}
+#gloss.open{transform:none;visibility:visible}
+#gloss .gk{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#5d6879)}
+#gloss h2{margin:0;font-size:22px}#gloss p{margin:0;line-height:1.5}
+#gloss .gb{background:var(--accent-soft,#e8eef8);border-radius:8px;padding:10px 12px;display:grid;gap:2px}#gloss .gb b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent,#2457a6)}
+#gloss .gx{justify-self:end;background:none;border:1px solid var(--line,#e1e6ec);border-radius:8px;padding:6px 10px;cursor:pointer;color:inherit;font:inherit;font-size:13px}
+@media (max-width:700px){#gloss{top:auto;bottom:0;height:auto;max-height:75vh;width:100%;border-left:0;border-top:1px solid var(--line,#e1e6ec);border-radius:16px 16px 0 0;transform:translateY(105%)}}
+@media (prefers-reduced-motion:reduce){#gloss{transition:none}}`;
+document.head.appendChild(css);
+const panel=document.createElement("aside");panel.id="gloss";panel.setAttribute("aria-label","Glossary");panel.setAttribute("role","dialog");
+document.body.appendChild(panel);
+const byKey={};G.forEach(g=>byKey[g[0]]=g);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let lastFocus=null;
+function open(k){const g=byKey[k];if(!g)return;lastFocus=document.activeElement;
+  panel.innerHTML=`<button class="gx" data-gclose>Close ✕</button><div class="gk">Glossary</div><h2>${esc(g[1])}</h2><p>${esc(g[3])}</p><div class="gb"><b>Example</b><span>${esc(g[4])}</span></div><div class="gb"><b>Why it matters</b><span>${esc(g[5])}</span></div>`;
+  wrapIn(panel,new Set([k]),true);panel.classList.add("open");panel.querySelector(".gx").focus()}
+function close(){panel.classList.remove("open");if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+document.addEventListener("click",e=>{const t=e.target.closest(".gterm");if(t){e.preventDefault();e.stopPropagation();open(t.dataset.g);return}
+  if(e.target.closest("[data-gclose]")){close();return}
+  if(panel.classList.contains("open")&&!e.target.closest("#gloss"))close()},true);
+document.addEventListener("keydown",e=>{const t=e.target.closest&&e.target.closest(".gterm");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();open(t.dataset.g)}
+  if(e.key==="Escape"&&panel.classList.contains("open")){e.stopPropagation();close()}},true);
+const SKIP="button,a,label,input,textarea,select,option,td,th,code,script,style,.gterm,#gloss,.m,.mono,.role,.dot,.stamp,.modal,.bar,.tag,.kv,.stat,.chips,summary,h1,legend,.eyebrow";
+function wrap(){wrapIn(document.querySelector(".wrap")||document.body,new Set([...document.querySelectorAll(".wrap .gterm,body>.gterm")].map(x=>x.dataset.g)),false)}
+function wrapIn(root,used,inPanel){
+  const skip=inPanel?"button,h2,.gk,.gterm":SKIP;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>!n.nodeValue.trim()||(n.parentElement&&n.parentElement.closest(skip))||(n.parentElement&&n.parentElement.closest("b")&&inPanel)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  for(const node of nodes){
+    let cur=node;
+    while(cur){
+      let best=null;
+      for(const g of G){if(used.has(g[0]))continue;const m=g[2].exec(cur.nodeValue);if(m&&(!best||m.index<best.m.index||(m.index===best.m.index&&m[0].length>best.m[0].length)))best={g,m}}
+      if(!best)break;const g=best.g,m=best.m;
+      const after=cur.splitText(m.index);const rest=after.splitText(m[0].length);
+      const sp=document.createElement("span");sp.className="gterm";sp.dataset.g=g[0];sp.tabIndex=0;sp.setAttribute("role","button");sp.title="What's this?";sp.textContent=after.nodeValue;
+      after.replaceWith(sp);used.add(g[0]);cur=rest;
+    }
+  }
+}
+let timer=null;
+const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>{obs.disconnect();wrap();obs.observe(document.body,{childList:true,subtree:true})},40)});
+wrap();obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script><!--/GLOSSARY-->
+
+</body></html>
